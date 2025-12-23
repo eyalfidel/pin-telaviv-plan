@@ -19,9 +19,9 @@ export default function Header() {
             </div>
             <div className="hidden sm:block">
               <h1 className="font-display font-semibold text-lg leading-tight">
-                Tel Aviv–Yafo
+                תל אביב-יפו
               </h1>
-              <p className="text-xs opacity-80">Bicycle Parking Initiative</p>
+              <p className="text-xs opacity-80">יוזמת חניית אופניים</p>
             </div>
           </Link>
 
@@ -34,7 +34,7 @@ export default function Header() {
                   location.pathname === '/' ? 'bg-primary-foreground/10' : ''
                 }`}
               >
-                Map
+                מפה
               </Button>
             </Link>
             <Link to="/admin">
@@ -45,7 +45,7 @@ export default function Header() {
                 }`}
               >
                 <Shield className="h-4 w-4" />
-                Admin
+                ממשק ניהול
               </Button>
             </Link>
           </nav>
@@ -73,7 +73,7 @@ export default function Header() {
                   location.pathname === '/' ? 'bg-primary-foreground/10' : ''
                 }`}
               >
-                Map
+                מפה
               </Button>
             </Link>
             <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)}>
@@ -84,7 +84,7 @@ export default function Header() {
                 }`}
               >
                 <Shield className="h-4 w-4" />
-                Admin Panel
+                ממשק ניהול
               </Button>
             </Link>
           </nav>

@@ -20,9 +20,9 @@ export default function AdminLogin() {
 
     const success = login(password);
     if (success) {
-      toast.success('Welcome to the admin panel');
+      toast.success('ברוכים הבאים לממשק הניהול');
     } else {
-      toast.error('Invalid password');
+      toast.error('סיסמה שגויה');
       setPassword('');
     }
     setIsLoading(false);
@@ -37,9 +37,9 @@ export default function AdminLogin() {
             <div className="bg-primary-foreground/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <Shield className="h-8 w-8" />
             </div>
-            <h1 className="text-xl font-display font-semibold">Admin Access</h1>
+            <h1 className="text-xl font-display font-semibold">גישת מנהל</h1>
             <p className="text-sm opacity-80 mt-1">
-              Municipal Staff Only
+              לעובדי העירייה בלבד
             </p>
           </div>
 
@@ -48,16 +48,17 @@ export default function AdminLogin() {
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium flex items-center gap-2">
                 <Lock className="h-4 w-4 text-muted-foreground" />
-                Password
+                סיסמה
               </Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter admin password"
+                placeholder="הזן סיסמת מנהל"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="field-civic"
                 autoFocus
+                dir="ltr"
               />
             </div>
 
@@ -66,18 +67,18 @@ export default function AdminLogin() {
               disabled={isLoading || !password}
               className="w-full btn-civic h-11"
             >
-              {isLoading ? 'Authenticating...' : 'Sign In'}
+              {isLoading ? 'מאמת...' : 'התחבר'}
             </Button>
 
             <p className="text-xs text-center text-muted-foreground">
-              This area is restricted to authorized municipal personnel only.
+              אזור זה מוגבל לצוות העירייה המורשה בלבד.
             </p>
           </form>
         </div>
 
         {/* Demo hint */}
         <p className="text-xs text-center text-muted-foreground mt-4">
-          Demo password: <code className="bg-muted px-2 py-0.5 rounded">tlv-admin-2024</code>
+          סיסמת הדגמה: <code className="bg-muted px-2 py-0.5 rounded" dir="ltr">tlv-admin-2024</code>
         </p>
       </div>
     </div>

@@ -36,17 +36,23 @@ export interface MapPosition {
 }
 
 export const PARKING_CONDITIONS: Record<ParkingCondition, string> = {
-  exists_need_more: 'There are existing bicycle parking facilities at this exact spot, but additional facilities are needed',
-  none_exists: 'There are no bicycle parking facilities at this location',
-  nearby_not_exact: 'There are bicycle parking facilities nearby (within short walking distance), but not at this exact spot',
+  exists_need_more: 'קיימות עמדות חניה לאופניים במיקום זה, אך יש צורך בעמדות נוספות',
+  none_exists: 'אין עמדות חניה לאופניים במיקום זה',
+  nearby_not_exact: 'קיימות עמדות חניה לאופניים בקרבת מקום, אך לא בנקודה המדויקת',
 };
 
 export const POINTS_OF_INTEREST: Record<PointOfInterest, string> = {
-  cultural: 'Cultural institution',
-  educational: 'Educational institution',
-  health: 'Health institution',
-  commercial: 'Commercial area',
-  transport: 'Public transport hub',
-  park: 'Park / public space',
-  other: 'Other',
+  cultural: 'מוסד תרבות',
+  educational: 'מוסד חינוכי',
+  health: 'מוסד בריאות',
+  commercial: 'אזור מסחרי',
+  transport: 'צומת תחבורה ציבורית',
+  park: 'פארק / מרחב ציבורי',
+  other: 'אחר',
+};
+
+export const STATUS_LABELS: Record<SubmissionStatus, string> = {
+  pending: 'ממתין לאישור',
+  approved: 'מאושר',
+  hidden: 'מוסתר',
 };

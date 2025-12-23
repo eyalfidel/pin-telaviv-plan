@@ -28,16 +28,16 @@ const Index = () => {
         {/* Filter Toggle Button */}
         <Button
           onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-          className={`absolute top-4 left-4 z-[1000] shadow-civic ${
+          className={`absolute top-4 right-4 z-[1000] shadow-civic ${
             hasActiveFilters ? 'bg-accent text-accent-foreground' : ''
           }`}
           variant={hasActiveFilters ? 'default' : 'secondary'}
         >
-          <Filter className="h-4 w-4 mr-2" />
-          Filters
+          <Filter className="h-4 w-4 ml-2" />
+          סינון
           {hasActiveFilters && (
-            <span className="ml-2 bg-primary-foreground/20 px-2 py-0.5 rounded-full text-xs">
-              Active
+            <span className="mr-2 bg-primary-foreground/20 px-2 py-0.5 rounded-full text-xs">
+              פעיל
             </span>
           )}
         </Button>
@@ -46,7 +46,7 @@ const Index = () => {
         <MapFilters isOpen={isFiltersOpen} onClose={() => setIsFiltersOpen(false)} />
 
         {/* Instructions Card */}
-        <div className="absolute bottom-6 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 z-[1000]">
+        <div className="absolute bottom-6 left-4 right-4 sm:right-auto sm:left-4 sm:w-80 z-[1000]">
           <div className="bg-card/95 backdrop-blur-sm rounded-lg shadow-civic border border-border p-4 animate-fade-in">
             <div className="flex items-start gap-3">
               <div className="bg-primary/10 p-2 rounded-lg shrink-0">
@@ -54,23 +54,23 @@ const Index = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-foreground text-sm">
-                  Suggest a Location
+                  הצע מיקום חדש
                 </h3>
                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  Click anywhere on the map to suggest a new bicycle parking location. Your input helps shape Tel Aviv–Yafo's cycling infrastructure.
+                  לחצו בכל מקום על המפה כדי להציע מיקום חדש לחניית אופניים. התרומה שלכם עוזרת לעצב את תשתית הרכיבה בתל אביב-יפו.
                 </p>
               </div>
             </div>
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
               <span className="text-xs text-muted-foreground">
-                {filteredCount} location{filteredCount !== 1 ? 's' : ''} shown
+                {filteredCount} מיקומים מוצגים
               </span>
               <a
                 href="#about"
                 className="text-xs text-primary hover:underline flex items-center gap-1"
               >
                 <Info className="h-3 w-3" />
-                About this initiative
+                אודות היוזמה
               </a>
             </div>
           </div>
