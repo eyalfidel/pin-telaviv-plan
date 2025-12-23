@@ -34,12 +34,12 @@ export default function MapFilters({ isOpen, onClose }: MapFiltersProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="absolute top-4 left-4 z-[1000] w-80 max-h-[calc(100vh-120px)] overflow-y-auto bg-card rounded-lg shadow-civic-lg border border-border animate-slide-in-up">
+    <div className="absolute top-4 right-4 z-[1000] w-80 max-h-[calc(100vh-120px)] overflow-y-auto bg-card rounded-lg shadow-civic-lg border border-border animate-slide-in-up">
       <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between">
         <div>
-          <h3 className="font-semibold text-foreground">Filter Submissions</h3>
+          <h3 className="font-semibold text-foreground">סינון הגשות</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {filteredCount} location{filteredCount !== 1 ? 's' : ''} shown
+            {filteredCount} מיקומים מוצגים
           </p>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose}>
@@ -50,7 +50,7 @@ export default function MapFilters({ isOpen, onClose }: MapFiltersProps) {
       <div className="p-4 space-y-6">
         {/* Parking Conditions */}
         <div>
-          <h4 className="text-sm font-medium text-foreground mb-3">Parking Conditions</h4>
+          <h4 className="text-sm font-medium text-foreground mb-3">מצב חניית אופניים</h4>
           <div className="space-y-3">
             {(Object.entries(PARKING_CONDITIONS) as [ParkingCondition, string][]).map(([key, label]) => (
               <label key={key} className="flex items-start gap-3 cursor-pointer group">
@@ -69,7 +69,7 @@ export default function MapFilters({ isOpen, onClose }: MapFiltersProps) {
 
         {/* Points of Interest */}
         <div>
-          <h4 className="text-sm font-medium text-foreground mb-3">Points of Interest</h4>
+          <h4 className="text-sm font-medium text-foreground mb-3">נקודות עניין</h4>
           <div className="space-y-3">
             {(Object.entries(POINTS_OF_INTEREST) as [PointOfInterest, string][]).map(([key, label]) => (
               <label key={key} className="flex items-center gap-3 cursor-pointer group">
@@ -93,7 +93,7 @@ export default function MapFilters({ isOpen, onClose }: MapFiltersProps) {
             onClick={clearFilters}
             className="w-full"
           >
-            Clear All Filters
+            נקה את כל הסינונים
           </Button>
         )}
       </div>

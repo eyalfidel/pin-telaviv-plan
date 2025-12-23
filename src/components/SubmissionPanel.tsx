@@ -50,27 +50,27 @@ export default function SubmissionPanel() {
     e.preventDefault();
     
     if (!pendingLocation) {
-      toast.error('Location not selected');
+      toast.error('לא נבחר מיקום');
       return;
     }
 
     if (!formData.address.trim()) {
-      toast.error('Please enter the full address');
+      toast.error('נא להזין כתובת מלאה');
       return;
     }
 
     if (!formData.email.trim() || !formData.email.includes('@')) {
-      toast.error('Please enter a valid email address');
+      toast.error('נא להזין כתובת אימייל תקינה');
       return;
     }
 
     if (!formData.phone.trim()) {
-      toast.error('Please enter your phone number');
+      toast.error('נא להזין מספר טלפון');
       return;
     }
 
     if (!formData.parkingCondition) {
-      toast.error('Please select the existing parking condition');
+      toast.error('נא לבחור את מצב החניה הקיים');
       return;
     }
 
@@ -90,7 +90,7 @@ export default function SubmissionPanel() {
         comments: formData.comments || undefined,
       });
 
-      toast.success('Thank you! Your submission has been received and will be reviewed.');
+      toast.success('תודה! ההגשה שלך התקבלה ותיבדק בקרוב.');
       
       // Reset form
       setFormData({
@@ -104,7 +104,7 @@ export default function SubmissionPanel() {
       });
       setPhotoPreview(null);
     } catch (error) {
-      toast.error('Something went wrong. Please try again.');
+      toast.error('משהו השתבש. נא לנסות שוב.');
     } finally {
       setIsSubmitting(false);
     }
@@ -127,13 +127,13 @@ export default function SubmissionPanel() {
   if (!isSubmissionPanelOpen || !pendingLocation) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] bg-card border-l border-border shadow-civic-lg z-[1001] flex flex-col animate-slide-in-right">
+    <div className="fixed inset-y-0 left-0 w-full sm:w-[420px] bg-card border-r border-border shadow-civic-lg z-[1001] flex flex-col animate-slide-in-right">
       {/* Header */}
       <div className="bg-primary text-primary-foreground px-6 py-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <MapPin className="h-5 w-5" />
           <div>
-            <h2 className="font-semibold">Suggest New Location</h2>
+            <h2 className="font-semibold">הצעת מיקום חדש</h2>
             <p className="text-xs opacity-90">
               {pendingLocation.lat.toFixed(5)}, {pendingLocation.lng.toFixed(5)}
             </p>
@@ -155,11 +155,11 @@ export default function SubmissionPanel() {
           {/* Address */}
           <div className="space-y-2">
             <Label htmlFor="address" className="text-sm font-medium">
-              Full Address <span className="text-destructive">*</span>
+              כתובת מלאה <span className="text-destructive">*</span>
             </Label>
             <Input
               id="address"
-              placeholder="Street name, house number, Tel Aviv–Yafo"
+              placeholder="שם רחוב, מספר בית, תל אביב-יפו"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               className="field-civic"
@@ -169,7 +169,7 @@ export default function SubmissionPanel() {
           {/* Contact Details Notice */}
           <div className="bg-muted/50 rounded-lg p-4 border border-border">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              <strong>Privacy Notice:</strong> Contact details are collected only for clarification and updates related to this submission process. Your information will not be shared publicly.
+              <strong>הודעת פרטיות:</strong> פרטי הקשר נאספים אך ורק לצורך בירורים ועדכונים הקשורים להגשה זו. המידע שלך לא ישותף באופן פומבי.
             </p>
           </div>
 
@@ -177,7 +177,7 @@ export default function SubmissionPanel() {
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
               <Mail className="h-4 w-4 text-muted-foreground" />
-              Email Address <span className="text-destructive">*</span>
+              כתובת אימייל <span className="text-destructive">*</span>
             </Label>
             <Input
               id="email"
@@ -186,6 +186,7 @@ export default function SubmissionPanel() {
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="field-civic"
+              dir="ltr"
             />
           </div>
 
@@ -193,7 +194,7 @@ export default function SubmissionPanel() {
           <div className="space-y-2">
             <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-2">
               <Phone className="h-4 w-4 text-muted-foreground" />
-              Mobile Phone <span className="text-destructive">*</span>
+              טלפון נייד <span className="text-destructive">*</span>
             </Label>
             <Input
               id="phone"
@@ -202,6 +203,7 @@ export default function SubmissionPanel() {
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               className="field-civic"
+              dir="ltr"
             />
           </div>
 
@@ -209,7 +211,7 @@ export default function SubmissionPanel() {
           <div className="space-y-2">
             <Label className="text-sm font-medium flex items-center gap-2">
               <Camera className="h-4 w-4 text-muted-foreground" />
-              Photo (Optional)
+              תמונה (אופציונלי)
             </Label>
             <div
               onClick={() => fileInputRef.current?.click()}
@@ -219,7 +221,7 @@ export default function SubmissionPanel() {
                 <div className="relative">
                   <img
                     src={photoPreview}
-                    alt="Preview"
+                    alt="תצוגה מקדימה"
                     className="max-h-40 mx-auto rounded-md"
                   />
                   <Button
@@ -232,14 +234,14 @@ export default function SubmissionPanel() {
                       setPhotoPreview(null);
                     }}
                   >
-                    Remove Photo
+                    הסר תמונה
                   </Button>
                 </div>
               ) : (
                 <>
                   <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    Click to upload a photo of the location
+                    לחצו להעלאת תמונה של המיקום
                   </p>
                 </>
               )}
@@ -256,7 +258,7 @@ export default function SubmissionPanel() {
           {/* Parking Condition */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">
-              Existing Bicycle Parking <span className="text-destructive">*</span>
+              מצב חניית אופניים קיים <span className="text-destructive">*</span>
             </Label>
             <RadioGroup
               value={formData.parkingCondition}
@@ -277,9 +279,9 @@ export default function SubmissionPanel() {
           {/* Points of Interest */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">
-              Is This Location a Point of Interest?
+              האם המיקום הוא נקודת עניין?
             </Label>
-            <p className="text-xs text-muted-foreground -mt-1">Select all that apply</p>
+            <p className="text-xs text-muted-foreground -mt-1">ניתן לבחור מספר אפשרויות</p>
             <div className="space-y-3">
               {(Object.entries(POINTS_OF_INTEREST) as [PointOfInterest, string][]).map(([key, label]) => (
                 <div key={key} className="flex items-center gap-3">
@@ -297,7 +299,7 @@ export default function SubmissionPanel() {
             
             {formData.pointsOfInterest.includes('other') && (
               <Input
-                placeholder="Please specify..."
+                placeholder="נא לפרט..."
                 value={formData.otherPointOfInterest}
                 onChange={(e) => setFormData({ ...formData, otherPointOfInterest: e.target.value })}
                 className="field-civic mt-2"
@@ -308,11 +310,11 @@ export default function SubmissionPanel() {
           {/* Comments */}
           <div className="space-y-2">
             <Label htmlFor="comments" className="text-sm font-medium">
-              Additional Comments
+              הערות נוספות
             </Label>
             <Textarea
               id="comments"
-              placeholder="Any additional context or explanation about this location..."
+              placeholder="הקשר נוסף או הסבר על המיקום..."
               value={formData.comments}
               onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
               rows={4}
@@ -328,7 +330,7 @@ export default function SubmissionPanel() {
             disabled={isSubmitting}
             className="w-full btn-civic h-11"
           >
-            {isSubmitting ? 'Submitting...' : 'Submit Location'}
+            {isSubmitting ? 'שולח...' : 'שלח הצעה'}
           </Button>
         </div>
       </form>

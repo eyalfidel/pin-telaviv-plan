@@ -4,6 +4,16 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Assistant:wght@400;500;600;700&display=swap');
 
+/* RTL Support */
+html[dir="rtl"] {
+  direction: rtl;
+}
+
+html[dir="rtl"] .leaflet-control-zoom {
+  left: auto;
+  right: 10px;
+}
+
 /* Tel Aviv Municipal Civic Design System */
 
 @layer base {
@@ -202,8 +212,19 @@
 }
 
 @layer utilities {
-  /* Animation for panel slide-in */
+  /* Animation for panel slide-in - RTL aware */
   @keyframes slide-in-right {
+    from {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-in-left {
     from {
       transform: translateX(100%);
       opacity: 0;

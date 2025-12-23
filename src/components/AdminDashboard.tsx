@@ -43,7 +43,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useSubmissionStore } from '@/store/submissionStore';
 import { useAdminStore } from '@/store/adminStore';
-import { BicycleSubmission, PARKING_CONDITIONS, POINTS_OF_INTEREST, SubmissionStatus } from '@/types/submission';
+import { BicycleSubmission, PARKING_CONDITIONS, POINTS_OF_INTEREST, SubmissionStatus, STATUS_LABELS } from '@/types/submission';
 import BicycleMap from '@/components/BicycleMap';
 import { toast } from 'sonner';
 
@@ -69,17 +69,17 @@ export default function AdminDashboard() {
 
   const exportToCSV = () => {
     const headers = [
-      'ID',
-      'Address',
-      'Email',
-      'Phone',
-      'Latitude',
-      'Longitude',
-      'Parking Condition',
-      'Points of Interest',
-      'Comments',
-      'Status',
-      'Created At',
+      'מזהה',
+      'כתובת',
+      'אימייל',
+      'טלפון',
+      'קו רוחב',
+      'קו אורך',
+      'מצב חניה',
+      'נקודות עניין',
+      'הערות',
+      'סטטוס',
+      'תאריך יצירה',
     ];
 
     const rows = submissions.map((s) => [
@@ -92,13 +92,13 @@ export default function AdminDashboard() {
       PARKING_CONDITIONS[s.parkingCondition],
       `"${s.pointsOfInterest.map((poi) => POINTS_OF_INTEREST[poi]).join(', ')}"`,
       `"${s.comments || ''}"`,
-      s.status,
+      STATUS_LABELS[s.status],
       s.createdAt.toISOString(),
     ]);
 
     const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    downloadFile(csv, 'bicycle-parking-submissions.csv', 'text/csv');
-    toast.success('CSV exported successfully');
+    downloadFile(csv, 'bicycle-parking-submissions.csv', 'text/csv;charset=utf-8');
+    toast.success('הקובץ יוצא בהצלחה');
   };
 
   const exportToGeoJSON = () => {
@@ -118,14 +118,14 @@ export default function AdminDashboard() {
           parkingCondition: PARKING_CONDITIONS[s.parkingCondition],
           pointsOfInterest: s.pointsOfInterest.map((poi) => POINTS_OF_INTEREST[poi]),
           comments: s.comments,
-          status: s.status,
+          status: STATUS_LABELS[s.status],
           createdAt: s.createdAt.toISOString(),
         },
       })),
     };
 
     downloadFile(JSON.stringify(geojson, null, 2), 'bicycle-parking-submissions.geojson', 'application/json');
-    toast.success('GeoJSON exported successfully');
+    toast.success('הקובץ יוצא בהצלחה');
   };
 
   const downloadFile = (content: string, filename: string, type: string) => {
@@ -142,22 +142,22 @@ export default function AdminDashboard() {
 
   const handleStatusChange = (id: string, newStatus: SubmissionStatus) => {
     updateSubmissionStatus(id, newStatus);
-    toast.success(`Submission ${newStatus}`);
+    toast.success(`ההגשה ${STATUS_LABELS[newStatus]}`);
   };
 
   const handleDelete = (id: string) => {
     deleteSubmission(id);
-    toast.success('Submission deleted');
+    toast.success('ההגשה נמחקה');
   };
 
   const getStatusBadge = (status: SubmissionStatus) => {
     switch (status) {
       case 'approved':
-        return <Badge className="badge-approved">Approved</Badge>;
+        return <Badge className="badge-approved">{STATUS_LABELS.approved}</Badge>;
       case 'pending':
-        return <Badge className="badge-pending">Pending</Badge>;
+        return <Badge className="badge-pending">{STATUS_LABELS.pending}</Badge>;
       case 'hidden':
-        return <Badge className="badge-hidden">Hidden</Badge>;
+        return <Badge className="badge-hidden">{STATUS_LABELS.hidden}</Badge>;
     }
   };
 
@@ -176,10 +176,10 @@ export default function AdminDashboard() {
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
               <h1 className="text-xl font-display font-semibold text-foreground">
-                Admin Dashboard
+                לוח בקרה
               </h1>
               <p className="text-sm text-muted-foreground">
-                Manage bicycle parking submissions
+                ניהול הגשות חניית אופניים
               </p>
             </div>
 
@@ -192,8 +192,8 @@ export default function AdminDashboard() {
                   onClick={() => setViewMode('table')}
                   className="rounded-none"
                 >
-                  <TableIcon className="h-4 w-4 mr-1" />
-                  Table
+                  <TableIcon className="h-4 w-4 ml-1" />
+                  טבלה
                 </Button>
                 <Button
                   variant={viewMode === 'map' ? 'default' : 'ghost'}
@@ -201,25 +201,25 @@ export default function AdminDashboard() {
                   onClick={() => setViewMode('map')}
                   className="rounded-none"
                 >
-                  <Map className="h-4 w-4 mr-1" />
-                  Map
+                  <Map className="h-4 w-4 ml-1" />
+                  מפה
                 </Button>
               </div>
 
               {/* Export Buttons */}
               <Button variant="outline" size="sm" onClick={exportToCSV}>
-                <Download className="h-4 w-4 mr-1" />
+                <Download className="h-4 w-4 ml-1" />
                 CSV
               </Button>
               <Button variant="outline" size="sm" onClick={exportToGeoJSON}>
-                <Download className="h-4 w-4 mr-1" />
+                <Download className="h-4 w-4 ml-1" />
                 GeoJSON
               </Button>
 
               {/* Logout */}
               <Button variant="ghost" size="sm" onClick={logout}>
-                <LogOut className="h-4 w-4 mr-1" />
-                Logout
+                <LogOut className="h-4 w-4 ml-1" />
+                התנתק
               </Button>
             </div>
           </div>
@@ -228,19 +228,19 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
             <div className="bg-muted/50 rounded-lg p-3 text-center">
               <p className="text-2xl font-semibold text-foreground">{stats.total}</p>
-              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-xs text-muted-foreground">סה״כ</p>
             </div>
             <div className="bg-warning/10 rounded-lg p-3 text-center">
               <p className="text-2xl font-semibold text-warning">{stats.pending}</p>
-              <p className="text-xs text-muted-foreground">Pending</p>
+              <p className="text-xs text-muted-foreground">ממתינים</p>
             </div>
             <div className="bg-success/10 rounded-lg p-3 text-center">
               <p className="text-2xl font-semibold text-success">{stats.approved}</p>
-              <p className="text-xs text-muted-foreground">Approved</p>
+              <p className="text-xs text-muted-foreground">מאושרים</p>
             </div>
             <div className="bg-muted rounded-lg p-3 text-center">
               <p className="text-2xl font-semibold text-muted-foreground">{stats.hidden}</p>
-              <p className="text-xs text-muted-foreground">Hidden</p>
+              <p className="text-xs text-muted-foreground">מוסתרים</p>
             </div>
           </div>
         </div>
@@ -253,24 +253,24 @@ export default function AdminDashboard() {
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by address, email, or comments..."
+                  placeholder="חיפוש לפי כתובת, אימייל או הערות..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 field-civic"
+                  className="pr-9 field-civic"
                 />
               </div>
               <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
                 <SelectTrigger className="w-full sm:w-40">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Status" />
+                  <Filter className="h-4 w-4 ml-2" />
+                  <SelectValue placeholder="סטטוס" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="hidden">Hidden</SelectItem>
+                  <SelectItem value="all">כל הסטטוסים</SelectItem>
+                  <SelectItem value="pending">ממתין לאישור</SelectItem>
+                  <SelectItem value="approved">מאושר</SelectItem>
+                  <SelectItem value="hidden">מוסתר</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -281,20 +281,20 @@ export default function AdminDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Address</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Condition</TableHead>
-                      <TableHead>POI</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>כתובת</TableHead>
+                      <TableHead>פרטי קשר</TableHead>
+                      <TableHead>מצב חניה</TableHead>
+                      <TableHead>נ״ע</TableHead>
+                      <TableHead>סטטוס</TableHead>
+                      <TableHead>תאריך</TableHead>
+                      <TableHead className="text-left">פעולות</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredSubmissions.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                          No submissions found
+                          לא נמצאו הגשות
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -309,8 +309,8 @@ export default function AdminDashboard() {
                             )}
                           </TableCell>
                           <TableCell>
-                            <p className="text-sm">{submission.email}</p>
-                            <p className="text-xs text-muted-foreground">{submission.phone}</p>
+                            <p className="text-sm" dir="ltr">{submission.email}</p>
+                            <p className="text-xs text-muted-foreground" dir="ltr">{submission.phone}</p>
                           </TableCell>
                           <TableCell>
                             <p className="text-xs max-w-[150px] line-clamp-2">
@@ -333,7 +333,7 @@ export default function AdminDashboard() {
                           </TableCell>
                           <TableCell>{getStatusBadge(submission.status)}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">
-                            {submission.createdAt.toLocaleDateString()}
+                            {submission.createdAt.toLocaleDateString('he-IL')}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center justify-end gap-1">
@@ -342,7 +342,7 @@ export default function AdminDashboard() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => handleStatusChange(submission.id, 'approved')}
-                                  title="Approve"
+                                  title="אשר"
                                 >
                                   <Check className="h-4 w-4 text-success" />
                                 </Button>
@@ -352,7 +352,7 @@ export default function AdminDashboard() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => handleStatusChange(submission.id, 'hidden')}
-                                  title="Hide"
+                                  title="הסתר"
                                 >
                                   <EyeOff className="h-4 w-4 text-muted-foreground" />
                                 </Button>
@@ -362,31 +362,31 @@ export default function AdminDashboard() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => handleStatusChange(submission.id, 'pending')}
-                                  title="Show"
+                                  title="הצג"
                                 >
                                   <Eye className="h-4 w-4 text-muted-foreground" />
                                 </Button>
                               )}
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" title="Delete">
+                                  <Button variant="ghost" size="icon" title="מחק">
                                     <Trash2 className="h-4 w-4 text-destructive" />
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Submission</AlertDialogTitle>
+                                    <AlertDialogTitle>מחיקת הגשה</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      Are you sure you want to permanently delete this submission? This action cannot be undone.
+                                      האם אתה בטוח שברצונך למחוק הגשה זו לצמיתות? פעולה זו אינה ניתנת לביטול.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogFooter className="flex-row-reverse gap-2">
+                                    <AlertDialogCancel>ביטול</AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() => handleDelete(submission.id)}
                                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                     >
-                                      Delete
+                                      מחק
                                     </AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
