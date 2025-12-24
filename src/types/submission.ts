@@ -12,7 +12,12 @@ export type PointOfInterest =
   | 'park' 
   | 'other';
 
-export type SubmissionStatus = 'pending' | 'approved' | 'hidden';
+export type SubmissionStatus = 
+  | 'pending' 
+  | 'in_review' 
+  | 'approved' 
+  | 'rejected' 
+  | 'hidden';
 
 export interface BicycleSubmission {
   id: string;
@@ -52,7 +57,9 @@ export const POINTS_OF_INTEREST: Record<PointOfInterest, string> = {
 };
 
 export const STATUS_LABELS: Record<SubmissionStatus, string> = {
-  pending: 'ממתין לאישור',
-  approved: 'מאושר',
+  pending: 'ממתין לאישור במערכת',
+  in_review: 'הבקשה התקבלה לבדיקה',
+  approved: 'הבקשה אושרה',
+  rejected: 'הבקשה נדחתה',
   hidden: 'מוסתר',
 };

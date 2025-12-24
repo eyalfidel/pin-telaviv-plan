@@ -1,16 +1,12 @@
 import { useState } from 'react';
 import { 
   Download, 
-  Eye, 
-  EyeOff, 
   Trash2, 
   LogOut, 
   Table as TableIcon, 
   Map,
   Filter,
-  Search,
-  Check,
-  X
+  Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -156,6 +152,10 @@ export default function AdminDashboard() {
         return <Badge className="badge-approved">{STATUS_LABELS.approved}</Badge>;
       case 'pending':
         return <Badge className="badge-pending">{STATUS_LABELS.pending}</Badge>;
+      case 'in_review':
+        return <Badge className="bg-blue-500/20 text-blue-700 border-blue-500/30">{STATUS_LABELS.in_review}</Badge>;
+      case 'rejected':
+        return <Badge className="bg-destructive/20 text-destructive border-destructive/30">{STATUS_LABELS.rejected}</Badge>;
       case 'hidden':
         return <Badge className="badge-hidden">{STATUS_LABELS.hidden}</Badge>;
     }
@@ -164,7 +164,9 @@ export default function AdminDashboard() {
   const stats = {
     total: submissions.length,
     pending: submissions.filter((s) => s.status === 'pending').length,
+    in_review: submissions.filter((s) => s.status === 'in_review').length,
     approved: submissions.filter((s) => s.status === 'approved').length,
+    rejected: submissions.filter((s) => s.status === 'rejected').length,
     hidden: submissions.filter((s) => s.status === 'hidden').length,
   };
 
@@ -225,7 +227,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mt-4">
             <div className="bg-muted/50 rounded-lg p-3 text-center">
               <p className="text-2xl font-semibold text-foreground">{stats.total}</p>
               <p className="text-xs text-muted-foreground">סה״כ</p>
@@ -234,9 +236,17 @@ export default function AdminDashboard() {
               <p className="text-2xl font-semibold text-warning">{stats.pending}</p>
               <p className="text-xs text-muted-foreground">ממתינים</p>
             </div>
+            <div className="bg-blue-500/10 rounded-lg p-3 text-center">
+              <p className="text-2xl font-semibold text-blue-600">{stats.in_review}</p>
+              <p className="text-xs text-muted-foreground">בבדיקה</p>
+            </div>
             <div className="bg-success/10 rounded-lg p-3 text-center">
               <p className="text-2xl font-semibold text-success">{stats.approved}</p>
               <p className="text-xs text-muted-foreground">מאושרים</p>
+            </div>
+            <div className="bg-destructive/10 rounded-lg p-3 text-center">
+              <p className="text-2xl font-semibold text-destructive">{stats.rejected}</p>
+              <p className="text-xs text-muted-foreground">נדחו</p>
             </div>
             <div className="bg-muted rounded-lg p-3 text-center">
               <p className="text-2xl font-semibold text-muted-foreground">{stats.hidden}</p>
@@ -262,15 +272,17 @@ export default function AdminDashboard() {
                 />
               </div>
               <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-                <SelectTrigger className="w-full sm:w-40">
+                <SelectTrigger className="w-full sm:w-48">
                   <Filter className="h-4 w-4 ml-2" />
                   <SelectValue placeholder="סטטוס" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">כל הסטטוסים</SelectItem>
-                  <SelectItem value="pending">ממתין לאישור</SelectItem>
-                  <SelectItem value="approved">מאושר</SelectItem>
-                  <SelectItem value="hidden">מוסתר</SelectItem>
+                  <SelectItem value="pending">{STATUS_LABELS.pending}</SelectItem>
+                  <SelectItem value="in_review">{STATUS_LABELS.in_review}</SelectItem>
+                  <SelectItem value="approved">{STATUS_LABELS.approved}</SelectItem>
+                  <SelectItem value="rejected">{STATUS_LABELS.rejected}</SelectItem>
+                  <SelectItem value="hidden">{STATUS_LABELS.hidden}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -336,37 +348,22 @@ export default function AdminDashboard() {
                             {submission.createdAt.toLocaleDateString('he-IL')}
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center justify-end gap-1">
-                              {submission.status !== 'approved' && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleStatusChange(submission.id, 'approved')}
-                                  title="אשר"
-                                >
-                                  <Check className="h-4 w-4 text-success" />
-                                </Button>
-                              )}
-                              {submission.status !== 'hidden' && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleStatusChange(submission.id, 'hidden')}
-                                  title="הסתר"
-                                >
-                                  <EyeOff className="h-4 w-4 text-muted-foreground" />
-                                </Button>
-                              )}
-                              {submission.status === 'hidden' && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleStatusChange(submission.id, 'pending')}
-                                  title="הצג"
-                                >
-                                  <Eye className="h-4 w-4 text-muted-foreground" />
-                                </Button>
-                              )}
+                            <div className="flex items-center justify-end gap-2">
+                              <Select 
+                                value={submission.status} 
+                                onValueChange={(v) => handleStatusChange(submission.id, v as SubmissionStatus)}
+                              >
+                                <SelectTrigger className="w-36 h-8 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">{STATUS_LABELS.pending}</SelectItem>
+                                  <SelectItem value="in_review">{STATUS_LABELS.in_review}</SelectItem>
+                                  <SelectItem value="approved">{STATUS_LABELS.approved}</SelectItem>
+                                  <SelectItem value="rejected">{STATUS_LABELS.rejected}</SelectItem>
+                                  <SelectItem value="hidden">{STATUS_LABELS.hidden}</SelectItem>
+                                </SelectContent>
+                              </Select>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button variant="ghost" size="icon" title="מחק">
