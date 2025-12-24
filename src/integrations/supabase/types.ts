@@ -14,16 +14,114 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bicycle_submissions: {
+        Row: {
+          address: string
+          comments: string | null
+          created_at: string
+          email: string | null
+          id: string
+          latitude: number
+          longitude: number
+          other_poi_text: string | null
+          parking_condition: Database["public"]["Enums"]["parking_condition"]
+          phone: string | null
+          photo_url: string | null
+          points_of_interest:
+            | Database["public"]["Enums"]["point_of_interest"][]
+            | null
+          status: Database["public"]["Enums"]["submission_status"]
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          comments?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          other_poi_text?: string | null
+          parking_condition: Database["public"]["Enums"]["parking_condition"]
+          phone?: string | null
+          photo_url?: string | null
+          points_of_interest?:
+            | Database["public"]["Enums"]["point_of_interest"][]
+            | null
+          status?: Database["public"]["Enums"]["submission_status"]
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          comments?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          other_poi_text?: string | null
+          parking_condition?: Database["public"]["Enums"]["parking_condition"]
+          phone?: string | null
+          photo_url?: string | null
+          points_of_interest?:
+            | Database["public"]["Enums"]["point_of_interest"][]
+            | null
+          status?: Database["public"]["Enums"]["submission_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
+      parking_condition: "existing_needs_more" | "none" | "nearby"
+      point_of_interest:
+        | "cultural"
+        | "educational"
+        | "health"
+        | "commercial"
+        | "transport"
+        | "park"
+        | "other"
+      submission_status:
+        | "pending"
+        | "in_review"
+        | "approved"
+        | "rejected"
+        | "hidden"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +248,25 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+      parking_condition: ["existing_needs_more", "none", "nearby"],
+      point_of_interest: [
+        "cultural",
+        "educational",
+        "health",
+        "commercial",
+        "transport",
+        "park",
+        "other",
+      ],
+      submission_status: [
+        "pending",
+        "in_review",
+        "approved",
+        "rejected",
+        "hidden",
+      ],
+    },
   },
 } as const
