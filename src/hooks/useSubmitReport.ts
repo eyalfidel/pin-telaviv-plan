@@ -12,6 +12,7 @@ interface SubmitReportData {
   comments?: string;
   email?: string;
   phone?: string;
+  reporterName?: string;
   photoFile?: File;
 }
 
@@ -73,6 +74,7 @@ export function useSubmitReport(): UseSubmitReportReturn {
           comments: data.comments || null,
           email: data.email || null,
           phone: data.phone || null,
+          reporter_name: data.reporterName || null,
           photo_url: photoUrl || null,
         });
 

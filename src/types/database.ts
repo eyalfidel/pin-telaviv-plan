@@ -15,6 +15,7 @@ export interface DbBicycleSubmission {
   photo_url?: string | null;
   email?: string | null;
   phone?: string | null;
+  reporter_name?: string | null;
   status: DbSubmissionStatus;
   created_at: string;
   updated_at: string;
@@ -38,6 +39,7 @@ export interface PublicSubmission {
 export interface AdminSubmission extends PublicSubmission {
   email?: string;
   phone?: string;
+  reporterName?: string;
   status: DbSubmissionStatus;
   updatedAt: Date;
 }
@@ -89,6 +91,7 @@ export function toAdminSubmission(row: DbBicycleSubmission): AdminSubmission {
     ...toPublicSubmission(row),
     email: row.email || undefined,
     phone: row.phone || undefined,
+    reporterName: row.reporter_name || undefined,
     status: row.status,
     updatedAt: new Date(row.updated_at),
   };

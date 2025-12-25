@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { X, Upload, MapPin, Phone, Mail, Camera } from 'lucide-react';
+import { X, Upload, MapPin, Phone, Mail, Camera, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,6 +33,7 @@ export default function PublicSubmissionForm({
     address: '',
     email: '',
     phone: '',
+    reporterName: '',
     parkingCondition: '' as DbParkingCondition | '',
     pointsOfInterest: [] as DbPointOfInterest[],
     otherPoiText: '',
@@ -85,6 +86,7 @@ export default function PublicSubmissionForm({
       comments: formData.comments || undefined,
       email: formData.email || undefined,
       phone: formData.phone || undefined,
+      reporterName: formData.reporterName || undefined,
       photoFile: photoFile || undefined,
     });
 
@@ -255,10 +257,25 @@ export default function PublicSubmissionForm({
           {/* Contact Details Notice */}
           <div className="bg-muted/50 rounded-lg p-4 border border-border">
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              <strong>פרטי קשר (אופציונלי):</strong> מסירת פרטי קשר היא אופציונלית ומשמשת רק לבירורים במידת הצורך. פרטים אלו אינם מוצגים בפומבי.
+              <strong>פרטים נוספים (אופציונלי):</strong> מסירת פרטי קשר היא אופציונלית ומשמשת רק לבירורים במידת הצורך. פרטים אלו אינם מוצגים בפומבי.
             </p>
             
             <div className="space-y-3">
+              <div className="space-y-1">
+                <Label htmlFor="reporterName" className="text-xs font-medium flex items-center gap-1">
+                  <User className="h-3 w-3 text-muted-foreground" />
+                  שם המדווח
+                </Label>
+                <Input
+                  id="reporterName"
+                  type="text"
+                  placeholder="שם פרטי ומשפחה"
+                  value={formData.reporterName}
+                  onChange={(e) => setFormData({ ...formData, reporterName: e.target.value })}
+                  className="field-civic h-9 text-sm"
+                />
+              </div>
+
               <div className="space-y-1">
                 <Label htmlFor="email" className="text-xs font-medium flex items-center gap-1">
                   <Mail className="h-3 w-3 text-muted-foreground" />
