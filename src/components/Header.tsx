@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bike, Menu, X } from 'lucide-react';
+import { Bike, Menu, X, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { isAdmin, isLoading } = useAuth();
 
   return (
     <header className="bg-primary text-primary-foreground sticky top-0 z-[1000] shadow-civic">
@@ -42,6 +44,18 @@ export default function Header() {
                 פרטיות
               </Button>
             </Link>
+            {!isLoading && isAdmin && (
+              <Link to="/admin">
+                <Button 
+                  variant={location.pathname === '/admin' ? 'secondary' : 'ghost'} 
+                  size="sm"
+                  className={location.pathname === '/admin' ? '' : 'text-primary-foreground hover:bg-primary-foreground/10'}
+                >
+                  <Shield className="h-4 w-4 ml-1" />
+                  ניהול
+                </Button>
+              </Link>
+            )}
           </nav>
 
           <Button
@@ -63,6 +77,14 @@ export default function Header() {
               <Link to="/privacy" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button variant="ghost" className="w-full justify-start text-primary-foreground">פרטיות</Button>
               </Link>
+              {!isLoading && isAdmin && (
+                <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start text-primary-foreground">
+                    <Shield className="h-4 w-4 ml-1" />
+                    ניהול
+                  </Button>
+                </Link>
+              )}
             </div>
           </nav>
         )}

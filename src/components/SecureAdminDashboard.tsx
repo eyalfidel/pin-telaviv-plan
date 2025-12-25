@@ -68,10 +68,11 @@ export default function SecureAdminDashboard() {
   });
 
   const exportToCSV = () => {
-    const headers = ['מזהה','כתובת','אימייל','טלפון','קו רוחב','קו אורך','מצב חניה','נקודות עניין','הערות','סטטוס','תאריך יצירה'];
+    const headers = ['מזהה','כתובת','שם מדווח','אימייל','טלפון','קו רוחב','קו אורך','מצב חניה','נקודות עניין','הערות','סטטוס','תאריך יצירה'];
     const rows = submissions.map((s) => [
       s.id,
       `"${s.address}"`,
+      s.reporterName || '',
       s.email || '',
       s.phone || '',
       s.latitude,
@@ -100,7 +101,7 @@ export default function SecureAdminDashboard() {
         type: 'Feature',
         geometry: { type: 'Point', coordinates: [s.longitude, s.latitude] },
         properties: {
-          id: s.id, address: s.address, email: s.email, phone: s.phone,
+          id: s.id, address: s.address, reporterName: s.reporterName, email: s.email, phone: s.phone,
           parkingCondition: PARKING_CONDITIONS_LABELS[s.parkingCondition],
           pointsOfInterest: s.pointsOfInterest.map((poi) => POINTS_OF_INTEREST_LABELS[poi]),
           comments: s.comments, status: STATUS_LABELS[s.status], createdAt: s.createdAt.toISOString(),
@@ -203,13 +204,14 @@ export default function SecureAdminDashboard() {
         <div className="bg-card rounded-lg border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader><TableRow><TableHead>כתובת</TableHead><TableHead>פרטי קשר</TableHead><TableHead>מצב חניה</TableHead><TableHead>סטטוס</TableHead><TableHead>תאריך</TableHead><TableHead className="text-left">פעולות</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>כתובת</TableHead><TableHead>שם מדווח</TableHead><TableHead>פרטי קשר</TableHead><TableHead>מצב חניה</TableHead><TableHead>סטטוס</TableHead><TableHead>תאריך</TableHead><TableHead className="text-left">פעולות</TableHead></TableRow></TableHeader>
               <TableBody>
                 {filteredSubmissions.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">לא נמצאו הגשות</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">לא נמצאו הגשות</TableCell></TableRow>
                 ) : filteredSubmissions.map((s) => (
                   <TableRow key={s.id}>
                     <TableCell className="max-w-[200px]"><p className="font-medium truncate">{s.address}</p>{s.comments && <p className="text-xs text-muted-foreground truncate">{s.comments}</p>}</TableCell>
+                    <TableCell className="text-sm">{s.reporterName || '-'}</TableCell>
                     <TableCell><p className="text-sm" dir="ltr">{s.email || '-'}</p><p className="text-xs text-muted-foreground" dir="ltr">{s.phone || '-'}</p></TableCell>
                     <TableCell><p className="text-xs max-w-[150px] line-clamp-2">{PARKING_CONDITIONS_LABELS[s.parkingCondition].split(',')[0]}</p></TableCell>
                     <TableCell>{getStatusBadge(s.status)}</TableCell>
