@@ -30,6 +30,7 @@ export type Database = {
           points_of_interest:
             | Database["public"]["Enums"]["point_of_interest"][]
             | null
+          reporter_name: string | null
           status: Database["public"]["Enums"]["submission_status"]
           updated_at: string
         }
@@ -48,6 +49,7 @@ export type Database = {
           points_of_interest?:
             | Database["public"]["Enums"]["point_of_interest"][]
             | null
+          reporter_name?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
           updated_at?: string
         }
@@ -66,6 +68,7 @@ export type Database = {
           points_of_interest?:
             | Database["public"]["Enums"]["point_of_interest"][]
             | null
+          reporter_name?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
           updated_at?: string
         }
