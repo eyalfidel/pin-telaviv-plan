@@ -32,6 +32,7 @@ export interface PublicSubmission {
   otherPoiText?: string;
   comments?: string;
   photoUrl?: string;
+  status: DbSubmissionStatus;
   createdAt: Date;
 }
 
@@ -40,7 +41,6 @@ export interface AdminSubmission extends PublicSubmission {
   email?: string;
   phone?: string;
   reporterName?: string;
-  status: DbSubmissionStatus;
   updatedAt: Date;
 }
 
@@ -81,6 +81,7 @@ export function toPublicSubmission(row: DbBicycleSubmission): PublicSubmission {
     otherPoiText: row.other_poi_text || undefined,
     comments: row.comments || undefined,
     photoUrl: row.photo_url || undefined,
+    status: row.status,
     createdAt: new Date(row.created_at),
   };
 }
