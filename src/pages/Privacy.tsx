@@ -100,9 +100,13 @@ export default function Privacy() {
             <h2 className="text-lg font-semibold text-foreground mb-3">
               יצירת קשר
             </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              לשאלות בנוגע למדיניות הפרטיות, ניתן לפנות ללשכת סגנית ראש העיר לתחבורה, בטיחות וקהילה גאה - מיטל להבי.
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              לשאלות בנוגע למדיניות הפרטיות, ניתן לפנות ללשכת סגנית ראש העיר לתחבורה, בטיחות וקהילה גאה - מיטל להבי:
             </p>
+            <ul className="list-disc list-inside text-muted-foreground space-y-2">
+              <li>טלפון: <a href="tel:03-7244655" className="text-primary hover:underline" dir="ltr">03-7244655</a></li>
+              <li>אימייל: <a href="mailto:meital_l@mail.tel-aviv.gov.il" className="text-primary hover:underline">meital_l@mail.tel-aviv.gov.il</a></li>
+            </ul>
           </section>
 
           <p className="text-xs text-muted-foreground mt-8 pt-4 border-t border-border">
