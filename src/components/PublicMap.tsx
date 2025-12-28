@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { PublicSubmission, PARKING_CONDITIONS_LABELS } from '@/types/database';
+import { PublicSubmission, PARKING_CONDITIONS_LABELS, DbSubmissionStatus } from '@/types/database';
 
 // Fix for default marker icons in Leaflet with Vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -11,8 +11,27 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-// Custom marker icon for bicycle parking
-const createBicycleIcon = () => {
+// Status colors for markers
+const STATUS_COLORS: Record<DbSubmissionStatus, string> = {
+  approved: 'hsl(142, 70%, 40%)',    // Green - approved
+  in_review: 'hsl(207, 70%, 45%)',   // Blue - in review
+  rejected: 'hsl(0, 70%, 50%)',      // Red - rejected
+  hidden: 'hsl(0, 0%, 50%)',         // Gray - hidden
+  pending: 'hsl(38, 92%, 50%)',      // Orange - pending (not shown but defined)
+};
+
+// Status labels in Hebrew
+const STATUS_LABELS: Record<DbSubmissionStatus, string> = {
+  approved: 'אושר',
+  in_review: 'בבדיקה',
+  rejected: 'נדחה',
+  hidden: 'מוסתר',
+  pending: 'ממתין',
+};
+
+// Custom marker icon for bicycle parking with status color
+const createBicycleIcon = (status: DbSubmissionStatus) => {
+  const color = STATUS_COLORS[status] || STATUS_COLORS.approved;
   return L.divIcon({
     className: 'custom-marker',
     html: `
@@ -20,7 +39,7 @@ const createBicycleIcon = () => {
         <div style="
           width: 32px;
           height: 32px;
-          background: hsl(207, 70%, 45%);
+          background: ${color};
           border-radius: 50% 50% 50% 0;
           transform: rotate(-45deg);
           border: 3px solid white;
@@ -135,10 +154,13 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick }: 
     // Add markers for each submission
     submissions.forEach((submission) => {
       const marker = L.marker([submission.latitude, submission.longitude], {
-        icon: createBicycleIcon(),
+        icon: createBicycleIcon(submission.status),
       });
 
-      // Public popup - no contact info, no status
+      const statusLabel = STATUS_LABELS[submission.status] || submission.status;
+      const statusColor = STATUS_COLORS[submission.status] || STATUS_COLORS.approved;
+
+      // Public popup with status indicator
       marker.bindPopup(`
         <div style="min-width: 200px;">
           <strong style="font-size: 14px;">${submission.address}</strong>
@@ -148,6 +170,17 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick }: 
           <p style="margin: 4px 0; font-size: 11px; color: #888;">
             ${PARKING_CONDITIONS_LABELS[submission.parkingCondition].split(',')[0]}
           </p>
+          <span style="
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            background: ${statusColor};
+            color: white;
+            margin: 4px 0;
+          ">
+            ${statusLabel}
+          </span>
           <p style="margin: 4px 0; font-size: 10px; color: #aaa;">
             ${submission.createdAt.toLocaleDateString('he-IL')}
           </p>

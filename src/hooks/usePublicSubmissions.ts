@@ -37,11 +37,11 @@ export function usePublicSubmissions(): UsePublicSubmissionsReturn {
     setError(null);
 
     try {
-      // Only fetch approved submissions with public columns (no email/phone)
+      // Fetch all submissions except pending ones (no email/phone for privacy)
       const { data, error: fetchError } = await supabase
         .from('bicycle_submissions')
         .select('id, latitude, longitude, address, parking_condition, points_of_interest, other_poi_text, comments, photo_url, created_at, updated_at, status')
-        .eq('status', 'approved')
+        .in('status', ['approved', 'in_review', 'rejected', 'hidden'])
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
