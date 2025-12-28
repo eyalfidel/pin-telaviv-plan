@@ -45,7 +45,7 @@ export default function Privacy() {
               כיצד המידע משמש?
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              המידע שנאסף משמש למטרות לימוד ותכנון עירוני בלבד. צוות העירייה משתמש בנתונים 
+              המידע שנאסף משמש למטרות לימוד ותכנון בלבד. צוות לשכת סגנית ראש העיר לתחבורה, בטיחות וקהילה גאה - מיטל להבי משתמש בנתונים 
               כדי לזהות צרכים ולתכנן תשתיות חניית אופניים עתידיות.
             </p>
           </section>
@@ -67,7 +67,7 @@ export default function Privacy() {
               </ul>
               
               <p className="text-sm text-muted-foreground mb-3">
-                <strong className="text-foreground">מידע פרטי (נגיש רק לצוות העירייה):</strong>
+                <strong className="text-foreground">מידע פרטי (נגיש רק לצוות הלשכה):</strong>
               </p>
               <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
                 <li>כתובת אימייל</li>
@@ -92,7 +92,7 @@ export default function Privacy() {
               אבטחת מידע
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              המידע מאוחסן במערכות מאובטחות. גישה לפרטי קשר מוגבלת לצוות העירייה המורשה בלבד.
+              המידע מאוחסן במערכות מאובטחות. גישה לפרטי קשר מוגבלת לצוות הלשכה המורשה בלבד.
             </p>
           </section>
 
@@ -101,7 +101,7 @@ export default function Privacy() {
               יצירת קשר
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              לשאלות בנוגע למדיניות הפרטיות, ניתן לפנות לעיריית תל אביב-יפו.
+              לשאלות בנוגע למדיניות הפרטיות, ניתן לפנות ללשכת סגנית ראש העיר לתחבורה, בטיחות וקהילה גאה - מיטל להבי.
             </p>
           </section>
 
