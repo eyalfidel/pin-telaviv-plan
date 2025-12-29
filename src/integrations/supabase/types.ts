@@ -17,6 +17,7 @@ export type Database = {
       bicycle_submissions: {
         Row: {
           address: string
+          admin_response: string | null
           comments: string | null
           created_at: string
           email: string | null
@@ -36,6 +37,7 @@ export type Database = {
         }
         Insert: {
           address: string
+          admin_response?: string | null
           comments?: string | null
           created_at?: string
           email?: string | null
@@ -55,6 +57,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          admin_response?: string | null
           comments?: string | null
           created_at?: string
           email?: string | null

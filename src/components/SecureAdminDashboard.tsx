@@ -6,11 +6,15 @@ import {
   Table as TableIcon, 
   Map,
   Filter,
-  Search
+  Search,
+  MessageSquare,
+  Image as ImageIcon,
+  ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -37,6 +41,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminSubmissions } from '@/hooks/useAdminSubmissions';
 import { 
@@ -51,10 +63,12 @@ type ViewMode = 'table' | 'map';
 
 export default function SecureAdminDashboard() {
   const { signOut } = useAuth();
-  const { submissions, isLoading, updateStatus, deleteSubmission } = useAdminSubmissions();
+  const { submissions, isLoading, updateStatus, updateAdminResponse, deleteSubmission } = useAdminSubmissions();
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<DbSubmissionStatus | 'all'>('all');
+  const [editingResponseId, setEditingResponseId] = useState<string | null>(null);
+  const [editingResponseText, setEditingResponseText] = useState('');
 
   const filteredSubmissions = submissions.filter((s) => {
     const matchesSearch = 
@@ -128,6 +142,23 @@ export default function SecureAdminDashboard() {
     const success = await deleteSubmission(id);
     if (success) toast.success('ההגשה נמחקה');
     else toast.error('שגיאה במחיקה');
+  };
+
+  const handleOpenResponseEdit = (id: string, currentResponse?: string) => {
+    setEditingResponseId(id);
+    setEditingResponseText(currentResponse || '');
+  };
+
+  const handleSaveResponse = async () => {
+    if (!editingResponseId) return;
+    const success = await updateAdminResponse(editingResponseId, editingResponseText);
+    if (success) {
+      toast.success('התגובה נשמרה');
+      setEditingResponseId(null);
+      setEditingResponseText('');
+    } else {
+      toast.error('שגיאה בשמירת התגובה');
+    }
   };
 
   const getStatusBadge = (status: DbSubmissionStatus) => {
@@ -204,17 +235,49 @@ export default function SecureAdminDashboard() {
         <div className="bg-card rounded-lg border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader><TableRow><TableHead>כתובת</TableHead><TableHead>שם מדווח</TableHead><TableHead>פרטי קשר</TableHead><TableHead>מצב חניה</TableHead><TableHead>סטטוס</TableHead><TableHead>תאריך</TableHead><TableHead className="text-left">פעולות</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>כתובת</TableHead><TableHead>תמונה</TableHead><TableHead>שם מדווח</TableHead><TableHead>פרטי קשר</TableHead><TableHead>מצב חניה</TableHead><TableHead>סטטוס</TableHead><TableHead>תגובה</TableHead><TableHead>תאריך</TableHead><TableHead className="text-left">פעולות</TableHead></TableRow></TableHeader>
               <TableBody>
                 {filteredSubmissions.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">לא נמצאו הגשות</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">לא נמצאו הגשות</TableCell></TableRow>
                 ) : filteredSubmissions.map((s) => (
                   <TableRow key={s.id}>
                     <TableCell className="max-w-[200px]"><p className="font-medium truncate">{s.address}</p>{s.comments && <p className="text-xs text-muted-foreground truncate">{s.comments}</p>}</TableCell>
+                    <TableCell>
+                      {s.photoUrl ? (
+                        <a href={s.photoUrl} target="_blank" rel="noopener noreferrer" className="block">
+                          <img 
+                            src={s.photoUrl} 
+                            alt="תמונה" 
+                            className="w-12 h-12 object-cover rounded border border-border hover:opacity-80 transition-opacity cursor-pointer"
+                          />
+                        </a>
+                      ) : (
+                        <div className="w-12 h-12 bg-muted rounded border border-border flex items-center justify-center">
+                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell className="text-sm">{s.reporterName || '-'}</TableCell>
                     <TableCell><p className="text-sm" dir="ltr">{s.email || '-'}</p><p className="text-xs text-muted-foreground" dir="ltr">{s.phone || '-'}</p></TableCell>
-                    <TableCell><p className="text-xs max-w-[150px] line-clamp-2">{PARKING_CONDITIONS_LABELS[s.parkingCondition].split(',')[0]}</p></TableCell>
+                    <TableCell><p className="text-xs max-w-[150px] line-clamp-2">{PARKING_CONDITIONS_LABELS[s.parkingCondition]}</p></TableCell>
                     <TableCell>{getStatusBadge(s.status)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {s.adminResponse ? (
+                          <span className="text-xs text-muted-foreground truncate max-w-[100px]" title={s.adminResponse}>{s.adminResponse}</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6"
+                          onClick={() => handleOpenResponseEdit(s.id, s.adminResponse)}
+                        >
+                          <MessageSquare className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{s.createdAt.toLocaleDateString('he-IL')}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-end gap-2">
@@ -237,6 +300,27 @@ export default function SecureAdminDashboard() {
             </Table>
           </div>
         </div>
+
+        {/* Admin Response Edit Dialog */}
+        <Dialog open={!!editingResponseId} onOpenChange={(open) => !open && setEditingResponseId(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>עריכת תגובה</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <Textarea
+                value={editingResponseText}
+                onChange={(e) => setEditingResponseText(e.target.value)}
+                placeholder="הזן תגובה שתוצג לציבור..."
+                className="min-h-[120px]"
+              />
+            </div>
+            <DialogFooter className="flex-row-reverse gap-2">
+              <Button variant="outline" onClick={() => setEditingResponseId(null)}>ביטול</Button>
+              <Button onClick={handleSaveResponse}>שמור תגובה</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
