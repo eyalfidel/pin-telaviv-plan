@@ -13,6 +13,7 @@ interface UseAdminSubmissionsReturn {
   error: string | null;
   refetch: () => void;
   updateStatus: (id: string, status: DbSubmissionStatus) => Promise<boolean>;
+  updateAdminResponse: (id: string, response: string) => Promise<boolean>;
   deleteSubmission: (id: string) => Promise<boolean>;
 }
 
@@ -76,6 +77,27 @@ export function useAdminSubmissions(): UseAdminSubmissionsReturn {
     }
   };
 
+  const updateAdminResponse = async (id: string, response: string): Promise<boolean> => {
+    try {
+      const { error: updateError } = await supabase
+        .from('bicycle_submissions')
+        .update({ admin_response: response || null })
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setSubmissions((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, adminResponse: response || undefined } : s))
+      );
+
+      return true;
+    } catch (err) {
+      console.error('Error updating admin response:', err);
+      return false;
+    }
+  };
+
   const deleteSubmission = async (id: string): Promise<boolean> => {
     try {
       const { error: deleteError } = await supabase
@@ -101,6 +123,7 @@ export function useAdminSubmissions(): UseAdminSubmissionsReturn {
     error,
     refetch: fetchSubmissions,
     updateStatus,
+    updateAdminResponse,
     deleteSubmission,
   };
 }

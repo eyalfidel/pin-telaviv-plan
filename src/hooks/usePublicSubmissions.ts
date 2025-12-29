@@ -40,7 +40,7 @@ export function usePublicSubmissions(): UsePublicSubmissionsReturn {
       // Fetch all submissions except pending ones (no email/phone for privacy)
       const { data, error: fetchError } = await supabase
         .from('bicycle_submissions')
-        .select('id, latitude, longitude, address, parking_condition, points_of_interest, other_poi_text, comments, photo_url, created_at, updated_at, status')
+        .select('id, latitude, longitude, address, parking_condition, points_of_interest, other_poi_text, comments, photo_url, created_at, updated_at, status, admin_response')
         .in('status', ['approved', 'in_review', 'rejected', 'hidden'])
         .order('created_at', { ascending: false });
 

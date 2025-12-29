@@ -160,16 +160,45 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick }: 
       const statusLabel = STATUS_LABELS[submission.status] || submission.status;
       const statusColor = STATUS_COLORS[submission.status] || STATUS_COLORS.approved;
 
-      // Public popup with status indicator
+      // Public popup with status indicator, photo, and admin response
+      const photoHtml = submission.photoUrl ? `
+        <div style="margin: 8px 0;">
+          <a href="${submission.photoUrl}" target="_blank" rel="noopener noreferrer">
+            <img src="${submission.photoUrl}" alt="תמונה" style="
+              width: 100%;
+              max-height: 120px;
+              object-fit: cover;
+              border-radius: 8px;
+              cursor: pointer;
+              border: 1px solid #e5e5e5;
+            " />
+          </a>
+        </div>
+      ` : '';
+
+      const adminResponseHtml = submission.adminResponse ? `
+        <div style="
+          margin: 8px 0;
+          padding: 8px;
+          background: #f0f9ff;
+          border-radius: 8px;
+          border-right: 3px solid ${statusColor};
+        ">
+          <p style="margin: 0; font-size: 11px; color: #0369a1; font-weight: 500;">תגובת העירייה:</p>
+          <p style="margin: 4px 0 0; font-size: 12px; color: #0c4a6e;">${submission.adminResponse}</p>
+        </div>
+      ` : '';
+
       marker.bindPopup(`
-        <div style="min-width: 200px;">
+        <div style="min-width: 220px; max-width: 280px;">
           <strong style="font-size: 14px;">${submission.address}</strong>
           <p style="margin: 8px 0; font-size: 12px; color: #666;">
             ${submission.comments || 'אין הערות נוספות'}
           </p>
           <p style="margin: 4px 0; font-size: 11px; color: #888;">
-            ${PARKING_CONDITIONS_LABELS[submission.parkingCondition].split(',')[0]}
+            ${PARKING_CONDITIONS_LABELS[submission.parkingCondition]}
           </p>
+          ${photoHtml}
           <span style="
             display: inline-block;
             padding: 2px 8px;
@@ -181,6 +210,7 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick }: 
           ">
             ${statusLabel}
           </span>
+          ${adminResponseHtml}
           <p style="margin: 4px 0; font-size: 10px; color: #aaa;">
             ${submission.createdAt.toLocaleDateString('he-IL')}
           </p>
