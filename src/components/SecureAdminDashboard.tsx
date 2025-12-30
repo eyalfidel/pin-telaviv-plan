@@ -163,11 +163,11 @@ export default function SecureAdminDashboard() {
 
   const getStatusBadge = (status: DbSubmissionStatus) => {
     const styles: Record<DbSubmissionStatus, string> = {
-      pending: 'badge-pending',
+      pending: 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30',
       in_review: 'bg-blue-500/20 text-blue-700 border-blue-500/30',
-      approved: 'badge-approved',
+      approved: 'bg-green-500/20 text-green-700 border-green-500/30',
       rejected: 'bg-destructive/20 text-destructive border-destructive/30',
-      hidden: 'badge-hidden',
+      hidden: 'bg-muted text-muted-foreground border-muted-foreground/30',
     };
     return <Badge className={styles[status]}>{STATUS_LABELS[status]}</Badge>;
   };

@@ -19,7 +19,7 @@ export default function Header() {
             </div>
             <div>
               <h1 className="font-display font-semibold text-lg leading-tight">
-                חניית אופניים
+                מיפוי צרכים - עמדות קשירה לאופניים
               </h1>
               <p className="text-xs opacity-80">תל אביב-יפו</p>
             </div>

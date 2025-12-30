@@ -21,7 +21,7 @@ export interface DbBicycleSubmission {
   updated_at: string;
 }
 
-// Public submission type (no contact info)
+// Public submission type (includes reporter name, but no email/phone)
 export interface PublicSubmission {
   id: string;
   latitude: number;
@@ -32,6 +32,7 @@ export interface PublicSubmission {
   otherPoiText?: string;
   comments?: string;
   photoUrl?: string;
+  reporterName?: string;
   status: DbSubmissionStatus;
   adminResponse?: string;
   createdAt: Date;
@@ -82,6 +83,7 @@ export function toPublicSubmission(row: DbBicycleSubmission & { admin_response?:
     otherPoiText: row.other_poi_text || undefined,
     comments: row.comments || undefined,
     photoUrl: row.photo_url || undefined,
+    reporterName: row.reporter_name || undefined,
     status: row.status,
     adminResponse: row.admin_response || undefined,
     createdAt: new Date(row.created_at),
