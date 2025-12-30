@@ -11,22 +11,22 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-// Status colors for markers
+// Status colors for markers (ordered: pending=yellow, in_review=blue, approved=green, rejected=red, hidden=gray)
 const STATUS_COLORS: Record<DbSubmissionStatus, string> = {
-  approved: 'hsl(142, 70%, 40%)',    // Green - approved
+  pending: 'hsl(48, 96%, 53%)',      // Yellow - pending
   in_review: 'hsl(207, 70%, 45%)',   // Blue - in review
+  approved: 'hsl(142, 70%, 40%)',    // Green - approved
   rejected: 'hsl(0, 70%, 50%)',      // Red - rejected
   hidden: 'hsl(0, 0%, 50%)',         // Gray - hidden
-  pending: 'hsl(38, 92%, 50%)',      // Orange - pending (not shown but defined)
 };
 
 // Status labels in Hebrew
 const STATUS_LABELS: Record<DbSubmissionStatus, string> = {
-  approved: 'אושר',
-  in_review: 'בבדיקה',
-  rejected: 'נדחה',
+  pending: 'ממתין לאישור במערכת',
+  in_review: 'הבקשה בבדיקה',
+  approved: 'הבקשה אושרה',
+  rejected: 'הבקשה נדחתה',
   hidden: 'מוסתר',
-  pending: 'ממתין',
 };
 
 // Custom marker icon for bicycle parking with status color
@@ -189,9 +189,16 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick }: 
         </div>
       ` : '';
 
+      const reporterHtml = submission.reporterName ? `
+        <p style="margin: 4px 0; font-size: 11px; color: #666;">
+          <strong>מדווח:</strong> ${submission.reporterName}
+        </p>
+      ` : '';
+
       marker.bindPopup(`
         <div style="min-width: 220px; max-width: 280px;">
           <strong style="font-size: 14px;">${submission.address}</strong>
+          ${reporterHtml}
           <p style="margin: 8px 0; font-size: 12px; color: #666;">
             ${submission.comments || 'אין הערות נוספות'}
           </p>

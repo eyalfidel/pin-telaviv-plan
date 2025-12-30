@@ -21,6 +21,65 @@ interface UseSubmitReportReturn {
   isSubmitting: boolean;
 }
 
+// Rate limiting constants
+const RATE_LIMIT_KEY = 'bicycle_submission_rate_limit';
+const RATE_LIMIT_MAX_SUBMISSIONS = 5; // Max submissions per time window
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour window
+
+interface RateLimitData {
+  timestamps: number[];
+}
+
+function checkRateLimit(): { allowed: boolean; remainingTime?: number } {
+  try {
+    const stored = localStorage.getItem(RATE_LIMIT_KEY);
+    const now = Date.now();
+    let data: RateLimitData = { timestamps: [] };
+
+    if (stored) {
+      data = JSON.parse(stored);
+    }
+
+    // Filter out timestamps older than the window
+    data.timestamps = data.timestamps.filter(
+      (timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS
+    );
+
+    if (data.timestamps.length >= RATE_LIMIT_MAX_SUBMISSIONS) {
+      const oldestTimestamp = Math.min(...data.timestamps);
+      const remainingTime = Math.ceil((RATE_LIMIT_WINDOW_MS - (now - oldestTimestamp)) / 1000 / 60);
+      return { allowed: false, remainingTime };
+    }
+
+    return { allowed: true };
+  } catch {
+    // If localStorage fails, allow the submission
+    return { allowed: true };
+  }
+}
+
+function recordSubmission(): void {
+  try {
+    const stored = localStorage.getItem(RATE_LIMIT_KEY);
+    const now = Date.now();
+    let data: RateLimitData = { timestamps: [] };
+
+    if (stored) {
+      data = JSON.parse(stored);
+    }
+
+    // Filter and add new timestamp
+    data.timestamps = data.timestamps.filter(
+      (timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS
+    );
+    data.timestamps.push(now);
+
+    localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(data));
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
 export function useSubmitReport(): UseSubmitReportReturn {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,6 +107,15 @@ export function useSubmitReport(): UseSubmitReportReturn {
   };
 
   const submit = async (data: SubmitReportData): Promise<{ success: boolean; error?: string }> => {
+    // Check rate limit before proceeding
+    const rateLimitCheck = checkRateLimit();
+    if (!rateLimitCheck.allowed) {
+      return { 
+        success: false, 
+        error: `הגעת למגבלת הדיווחים. נא לנסות שוב בעוד ${rateLimitCheck.remainingTime} דקות.` 
+      };
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -79,6 +147,9 @@ export function useSubmitReport(): UseSubmitReportReturn {
         });
 
       if (insertError) throw insertError;
+
+      // Record successful submission for rate limiting
+      recordSubmission();
 
       return { success: true };
     } catch (err) {
