@@ -9,7 +9,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { 
   DbParkingCondition, 
   DbPointOfInterest,
-  PARKING_CONDITIONS_LABELS, 
+  PARKING_CONDITIONS_LABELS,
+  PARKING_CONDITIONS_ORDER,
   POINTS_OF_INTEREST_LABELS 
 } from '@/types/database';
 import { useSubmitReport } from '@/hooks/useSubmitReport';
@@ -35,6 +36,7 @@ export default function PublicSubmissionForm({
     phone: '',
     reporterName: '',
     parkingCondition: '' as DbParkingCondition | '',
+    existingSpacesCount: '',
     pointsOfInterest: [] as DbPointOfInterest[],
     otherPoiText: '',
     comments: '',
@@ -145,18 +147,35 @@ export default function PublicSubmissionForm({
             </Label>
             <RadioGroup
               value={formData.parkingCondition}
-              onValueChange={(value) => setFormData({ ...formData, parkingCondition: value as DbParkingCondition })}
+              onValueChange={(value) => setFormData({ ...formData, parkingCondition: value as DbParkingCondition, existingSpacesCount: value !== 'existing_needs_more' ? '' : formData.existingSpacesCount })}
               className="space-y-3"
             >
-              {(Object.entries(PARKING_CONDITIONS_LABELS) as [DbParkingCondition, string][]).map(([key, label]) => (
+              {PARKING_CONDITIONS_ORDER.map((key) => (
                 <div key={key} className="flex items-start gap-3">
                   <RadioGroupItem value={key} id={key} className="mt-0.5" />
                   <Label htmlFor={key} className="text-sm text-muted-foreground leading-tight cursor-pointer">
-                    {label}
+                    {PARKING_CONDITIONS_LABELS[key]}
                   </Label>
                 </div>
               ))}
             </RadioGroup>
+            
+            {formData.parkingCondition === 'existing_needs_more' && (
+              <div className="mr-6 mt-2">
+                <Label htmlFor="existingSpacesCount" className="text-xs font-medium text-muted-foreground">
+                  מספר עמדות חניה קיימות
+                </Label>
+                <Input
+                  id="existingSpacesCount"
+                  type="number"
+                  min="1"
+                  placeholder="לדוגמה: 5"
+                  value={formData.existingSpacesCount}
+                  onChange={(e) => setFormData({ ...formData, existingSpacesCount: e.target.value })}
+                  className="field-civic mt-1 w-32"
+                />
+              </div>
+            )}
           </div>
 
           {/* Points of Interest */}

@@ -47,18 +47,25 @@ export interface AdminSubmission extends PublicSubmission {
 }
 
 // Labels for UI (Hebrew)
+// Ordered array for UI display
+export const PARKING_CONDITIONS_ORDER: DbParkingCondition[] = [
+  'existing_needs_more',
+  'nearby',
+  'none',
+];
+
 export const PARKING_CONDITIONS_LABELS: Record<DbParkingCondition, string> = {
   existing_needs_more: 'קיימות עמדות חניה לאופניים במיקום זה, אך יש צורך בעמדות נוספות',
-  none: 'אין עמדות חניה לאופניים במיקום זה',
   nearby: 'קיימות עמדות חניה לאופניים בקרבת מקום, אך לא בנקודה המדויקת',
+  none: 'אין עמדות חניה לאופניים במיקום זה',
 };
 
 export const POINTS_OF_INTEREST_LABELS: Record<DbPointOfInterest, string> = {
   cultural: 'מוסד תרבות',
-  educational: 'מוסד חינוכי',
+  educational: 'מוסד חינוך',
   health: 'מוסד בריאות',
   commercial: 'אזור מסחרי',
-  transport: 'צומת תחבורה ציבורית',
+  transport: 'מרכז תחבורה ציבורית',
   park: 'פארק / מרחב ציבורי',
   other: 'אחר',
 };
