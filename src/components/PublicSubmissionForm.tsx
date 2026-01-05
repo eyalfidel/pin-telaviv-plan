@@ -89,6 +89,7 @@ export default function PublicSubmissionForm({
       email: formData.email || undefined,
       phone: formData.phone || undefined,
       reporterName: formData.reporterName || undefined,
+      existingSpacesCount: formData.existingSpacesCount ? parseInt(formData.existingSpacesCount, 10) : undefined,
       photoFile: photoFile || undefined,
     });
 
