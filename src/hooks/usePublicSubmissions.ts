@@ -41,7 +41,7 @@ export function usePublicSubmissions(): UsePublicSubmissionsReturn {
       const { data, error: fetchError } = await supabase
         .from('bicycle_submissions')
         .select('id, latitude, longitude, address, parking_condition, points_of_interest, other_poi_text, comments, photo_url, created_at, updated_at, status, admin_response, reporter_name')
-        .in('status', ['approved', 'in_review', 'rejected', 'hidden'])
+        .neq('status', 'hidden')
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
