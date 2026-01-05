@@ -13,6 +13,7 @@ interface SubmitReportData {
   email?: string;
   phone?: string;
   reporterName?: string;
+  existingSpacesCount?: number;
   photoFile?: File;
 }
 
@@ -143,6 +144,7 @@ export function useSubmitReport(): UseSubmitReportReturn {
           email: data.email || null,
           phone: data.phone || null,
           reporter_name: data.reporterName || null,
+          existing_spaces_count: data.existingSpacesCount || null,
           photo_url: photoUrl || null,
         });
 

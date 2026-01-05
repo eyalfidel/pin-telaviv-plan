@@ -21,6 +21,7 @@ export type Database = {
           comments: string | null
           created_at: string
           email: string | null
+          existing_spaces_count: number | null
           id: string
           latitude: number
           longitude: number
@@ -41,6 +42,7 @@ export type Database = {
           comments?: string | null
           created_at?: string
           email?: string | null
+          existing_spaces_count?: number | null
           id?: string
           latitude: number
           longitude: number
@@ -61,6 +63,7 @@ export type Database = {
           comments?: string | null
           created_at?: string
           email?: string | null
+          existing_spaces_count?: number | null
           id?: string
           latitude?: number
           longitude?: number
