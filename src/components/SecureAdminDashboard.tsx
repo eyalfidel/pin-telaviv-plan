@@ -9,12 +9,15 @@ import {
   Search,
   MessageSquare,
   Image as ImageIcon,
-  ExternalLink
+  Pencil
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Table,
   TableBody,
@@ -46,14 +49,18 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
-import { useAdminSubmissions } from '@/hooks/useAdminSubmissions';
+import { useAdminSubmissions, SubmissionUpdateData } from '@/hooks/useAdminSubmissions';
 import { 
-  DbSubmissionStatus, 
+  DbSubmissionStatus,
+  DbParkingCondition,
+  DbPointOfInterest,
+  AdminSubmission,
   PARKING_CONDITIONS_LABELS, 
+  PARKING_CONDITIONS_ORDER,
   POINTS_OF_INTEREST_LABELS, 
   STATUS_LABELS 
 } from '@/types/database';
@@ -63,12 +70,14 @@ type ViewMode = 'table' | 'map';
 
 export default function SecureAdminDashboard() {
   const { signOut } = useAuth();
-  const { submissions, isLoading, updateStatus, updateAdminResponse, deleteSubmission } = useAdminSubmissions();
+  const { submissions, isLoading, updateStatus, updateAdminResponse, updateSubmission, deleteSubmission } = useAdminSubmissions();
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<DbSubmissionStatus | 'all'>('all');
   const [editingResponseId, setEditingResponseId] = useState<string | null>(null);
   const [editingResponseText, setEditingResponseText] = useState('');
+  const [editingSubmission, setEditingSubmission] = useState<AdminSubmission | null>(null);
+  const [editFormData, setEditFormData] = useState<SubmissionUpdateData>({});
 
   const filteredSubmissions = submissions.filter((s) => {
     const matchesSearch = 
@@ -160,6 +169,42 @@ export default function SecureAdminDashboard() {
       setEditingResponseText('');
     } else {
       toast.error('שגיאה בשמירת התגובה');
+    }
+  };
+
+  const handleOpenEdit = (submission: AdminSubmission) => {
+    setEditingSubmission(submission);
+    setEditFormData({
+      address: submission.address,
+      parkingCondition: submission.parkingCondition,
+      pointsOfInterest: [...submission.pointsOfInterest],
+      otherPoiText: submission.otherPoiText || '',
+      comments: submission.comments || '',
+      reporterName: submission.reporterName || '',
+      email: submission.email || '',
+      phone: submission.phone || '',
+      existingSpacesCount: submission.existingSpacesCount ?? null,
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingSubmission) return;
+    const success = await updateSubmission(editingSubmission.id, editFormData);
+    if (success) {
+      toast.success('הפרטים עודכנו בהצלחה');
+      setEditingSubmission(null);
+      setEditFormData({});
+    } else {
+      toast.error('שגיאה בעדכון הפרטים');
+    }
+  };
+
+  const handlePoiToggle = (poi: DbPointOfInterest) => {
+    const current = editFormData.pointsOfInterest || [];
+    if (current.includes(poi)) {
+      setEditFormData({ ...editFormData, pointsOfInterest: current.filter(p => p !== poi) });
+    } else {
+      setEditFormData({ ...editFormData, pointsOfInterest: [...current, poi] });
     }
   };
 
@@ -283,7 +328,10 @@ export default function SecureAdminDashboard() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{s.createdAt.toLocaleDateString('he-IL')}</TableCell>
                     <TableCell>
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(s)} title="עריכה">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                         <Select value={s.status} onValueChange={(v) => handleStatusChange(s.id, v as DbSubmissionStatus)}>
                           <SelectTrigger className="w-36 h-8 text-xs"><SelectValue /></SelectTrigger>
                           <SelectContent>{Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
@@ -321,6 +369,149 @@ export default function SecureAdminDashboard() {
             <DialogFooter className="flex-row-reverse gap-2">
               <Button variant="outline" onClick={() => setEditingResponseId(null)}>ביטול</Button>
               <Button onClick={handleSaveResponse}>שמור תגובה</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Submission Dialog */}
+        <Dialog open={!!editingSubmission} onOpenChange={(open) => !open && setEditingSubmission(null)}>
+          <DialogContent className="max-w-2xl max-h-[90vh]">
+            <DialogHeader>
+              <DialogTitle>עריכת דיווח</DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh] pr-4">
+              <div className="space-y-6 py-4">
+                {/* Address */}
+                <div className="space-y-2">
+                  <Label htmlFor="edit-address">כתובת</Label>
+                  <Input
+                    id="edit-address"
+                    value={editFormData.address || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                  />
+                </div>
+
+                {/* Parking Condition */}
+                <div className="space-y-2">
+                  <Label>מצב חניית אופניים</Label>
+                  <RadioGroup
+                    value={editFormData.parkingCondition}
+                    onValueChange={(value) => setEditFormData({ 
+                      ...editFormData, 
+                      parkingCondition: value as DbParkingCondition,
+                      existingSpacesCount: value !== 'existing_needs_more' ? null : editFormData.existingSpacesCount
+                    })}
+                    className="space-y-2"
+                    dir="rtl"
+                  >
+                    {PARKING_CONDITIONS_ORDER.map((key) => (
+                      <div key={key} className="flex items-start gap-3">
+                        <RadioGroupItem value={key} id={`edit-${key}`} className="mt-0.5 shrink-0" />
+                        <Label htmlFor={`edit-${key}`} className="text-sm text-muted-foreground leading-tight cursor-pointer">
+                          {PARKING_CONDITIONS_LABELS[key]}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+
+                {/* Existing Spaces Count */}
+                {editFormData.parkingCondition === 'existing_needs_more' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-spaces-count">מספר עמדות קיימות</Label>
+                    <Input
+                      id="edit-spaces-count"
+                      type="number"
+                      min="0"
+                      value={editFormData.existingSpacesCount ?? ''}
+                      onChange={(e) => setEditFormData({ 
+                        ...editFormData, 
+                        existingSpacesCount: e.target.value ? parseInt(e.target.value) : null 
+                      })}
+                    />
+                  </div>
+                )}
+
+                {/* Points of Interest */}
+                <div className="space-y-2">
+                  <Label>נקודות עניין</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(Object.keys(POINTS_OF_INTEREST_LABELS) as DbPointOfInterest[]).map((poi) => (
+                      <div key={poi} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`edit-poi-${poi}`}
+                          checked={(editFormData.pointsOfInterest || []).includes(poi)}
+                          onCheckedChange={() => handlePoiToggle(poi)}
+                        />
+                        <Label htmlFor={`edit-poi-${poi}`} className="text-sm cursor-pointer">
+                          {POINTS_OF_INTEREST_LABELS[poi]}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Other POI Text */}
+                {(editFormData.pointsOfInterest || []).includes('other') && (
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-other-poi">פירוט נקודת עניין אחרת</Label>
+                    <Input
+                      id="edit-other-poi"
+                      value={editFormData.otherPoiText || ''}
+                      onChange={(e) => setEditFormData({ ...editFormData, otherPoiText: e.target.value })}
+                    />
+                  </div>
+                )}
+
+                {/* Comments */}
+                <div className="space-y-2">
+                  <Label htmlFor="edit-comments">הערות</Label>
+                  <Textarea
+                    id="edit-comments"
+                    value={editFormData.comments || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, comments: e.target.value })}
+                    className="min-h-[80px]"
+                  />
+                </div>
+
+                {/* Reporter Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="edit-reporter">שם מדווח</Label>
+                  <Input
+                    id="edit-reporter"
+                    value={editFormData.reporterName || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, reporterName: e.target.value })}
+                  />
+                </div>
+
+                {/* Contact Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-email">אימייל</Label>
+                    <Input
+                      id="edit-email"
+                      type="email"
+                      dir="ltr"
+                      value={editFormData.email || ''}
+                      onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-phone">טלפון</Label>
+                    <Input
+                      id="edit-phone"
+                      type="tel"
+                      dir="ltr"
+                      value={editFormData.phone || ''}
+                      onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+            <DialogFooter className="flex-row-reverse gap-2">
+              <Button variant="outline" onClick={() => setEditingSubmission(null)}>ביטול</Button>
+              <Button onClick={handleSaveEdit}>שמור שינויים</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
