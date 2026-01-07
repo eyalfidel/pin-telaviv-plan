@@ -157,13 +157,14 @@ export default function PublicSubmissionForm({
               value={formData.parkingCondition}
               onValueChange={(value) => setFormData({ ...formData, parkingCondition: value as DbParkingCondition, existingSpacesCount: value !== 'existing_needs_more' ? '' : formData.existingSpacesCount })}
               className="space-y-3"
+              dir="rtl"
             >
               {PARKING_CONDITIONS_ORDER.map((key) => (
-                <div key={key} className="flex items-start gap-3 flex-row-reverse justify-end">
-                  <Label htmlFor={key} className="text-sm text-muted-foreground leading-tight cursor-pointer text-right">
+                <div key={key} className="flex items-start gap-3">
+                  <RadioGroupItem value={key} id={key} className="mt-0.5 shrink-0" />
+                  <Label htmlFor={key} className="text-sm text-muted-foreground leading-tight cursor-pointer">
                     {PARKING_CONDITIONS_LABELS[key]}
                   </Label>
-                  <RadioGroupItem value={key} id={key} className="mt-0.5" />
                 </div>
               ))}
             </RadioGroup>
