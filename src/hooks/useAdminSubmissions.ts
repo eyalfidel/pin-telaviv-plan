@@ -3,9 +3,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   AdminSubmission, 
   DbSubmissionStatus,
+  DbParkingCondition,
+  DbPointOfInterest,
   toAdminSubmission 
 } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
+
+export interface SubmissionUpdateData {
+  address?: string;
+  parkingCondition?: DbParkingCondition;
+  pointsOfInterest?: DbPointOfInterest[];
+  otherPoiText?: string;
+  comments?: string;
+  reporterName?: string;
+  email?: string;
+  phone?: string;
+  existingSpacesCount?: number | null;
+}
 
 interface UseAdminSubmissionsReturn {
   submissions: AdminSubmission[];
@@ -14,6 +28,7 @@ interface UseAdminSubmissionsReturn {
   refetch: () => void;
   updateStatus: (id: string, status: DbSubmissionStatus) => Promise<boolean>;
   updateAdminResponse: (id: string, response: string) => Promise<boolean>;
+  updateSubmission: (id: string, data: SubmissionUpdateData) => Promise<boolean>;
   deleteSubmission: (id: string) => Promise<boolean>;
 }
 
@@ -98,6 +113,42 @@ export function useAdminSubmissions(): UseAdminSubmissionsReturn {
     }
   };
 
+  const updateSubmission = async (id: string, data: SubmissionUpdateData): Promise<boolean> => {
+    try {
+      const updateData: Record<string, any> = {};
+      
+      if (data.address !== undefined) updateData.address = data.address;
+      if (data.parkingCondition !== undefined) updateData.parking_condition = data.parkingCondition;
+      if (data.pointsOfInterest !== undefined) updateData.points_of_interest = data.pointsOfInterest;
+      if (data.otherPoiText !== undefined) updateData.other_poi_text = data.otherPoiText || null;
+      if (data.comments !== undefined) updateData.comments = data.comments || null;
+      if (data.reporterName !== undefined) updateData.reporter_name = data.reporterName || null;
+      if (data.email !== undefined) updateData.email = data.email || null;
+      if (data.phone !== undefined) updateData.phone = data.phone || null;
+      if (data.existingSpacesCount !== undefined) updateData.existing_spaces_count = data.existingSpacesCount;
+
+      const { error: updateError } = await supabase
+        .from('bicycle_submissions')
+        .update(updateData)
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setSubmissions((prev) =>
+        prev.map((s) => (s.id === id ? { 
+          ...s, 
+          ...data,
+        } : s))
+      );
+
+      return true;
+    } catch (err) {
+      console.error('Error updating submission:', err);
+      return false;
+    }
+  };
+
   const deleteSubmission = async (id: string): Promise<boolean> => {
     try {
       const { error: deleteError } = await supabase
@@ -124,6 +175,7 @@ export function useAdminSubmissions(): UseAdminSubmissionsReturn {
     refetch: fetchSubmissions,
     updateStatus,
     updateAdminResponse,
+    updateSubmission,
     deleteSubmission,
   };
 }
