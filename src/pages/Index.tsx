@@ -8,10 +8,11 @@ import PublicFilters from '@/components/PublicFilters';
 import PublicSubmissionForm from '@/components/PublicSubmissionForm';
 import IntroDialog from '@/components/IntroDialog';
 import { usePublicSubmissions } from '@/hooks/usePublicSubmissions';
+import { reverseGeocode } from '@/lib/geocoding';
 
 const Index = () => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [pendingLocation, setPendingLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [pendingLocation, setPendingLocation] = useState<{ lat: number; lng: number; address?: string } | null>(null);
   
   const { 
     getFilteredSubmissions, 
@@ -25,8 +26,15 @@ const Index = () => {
   const filteredSubmissions = getFilteredSubmissions();
   const hasActiveFilters = filters.parkingConditions.length > 0 || filters.pointsOfInterest.length > 0;
 
-  const handleMapClick = useCallback((lat: number, lng: number) => {
+  const handleMapClick = useCallback(async (lat: number, lng: number) => {
+    // Set location immediately to show the form
     setPendingLocation({ lat, lng });
+    
+    // Fetch address in background
+    const address = await reverseGeocode(lat, lng);
+    if (address) {
+      setPendingLocation(prev => prev ? { ...prev, address } : null);
+    }
   }, []);
 
   const handleFormClose = () => {
