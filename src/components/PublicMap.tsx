@@ -184,7 +184,7 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick }: 
           border-radius: 8px;
           border-right: 3px solid ${statusColor};
         ">
-          <p style="margin: 0; font-size: 11px; color: #0369a1; font-weight: 500;">תגובת העירייה:</p>
+          <p style="margin: 0; font-size: 11px; color: #0369a1; font-weight: 500;">תגובה:</p>
           <p style="margin: 4px 0 0; font-size: 12px; color: #0c4a6e;">${submission.adminResponse}</p>
         </div>
       ` : '';
