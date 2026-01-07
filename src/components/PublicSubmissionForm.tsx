@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { X, Upload, MapPin, Phone, Mail, Camera, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ import { useSubmitReport } from '@/hooks/useSubmitReport';
 import { toast } from 'sonner';
 
 interface PublicSubmissionFormProps {
-  pendingLocation: { lat: number; lng: number };
+  pendingLocation: { lat: number; lng: number; address?: string };
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -31,7 +31,7 @@ export default function PublicSubmissionForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
-    address: '',
+    address: pendingLocation.address || '',
     email: '',
     phone: '',
     reporterName: '',
@@ -43,6 +43,13 @@ export default function PublicSubmissionForm({
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
+  // Update address when it arrives from geocoding
+  useEffect(() => {
+    if (pendingLocation.address && !formData.address) {
+      setFormData(prev => ({ ...prev, address: pendingLocation.address! }));
+    }
+  }, [pendingLocation.address]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
