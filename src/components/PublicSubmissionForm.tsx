@@ -159,11 +159,11 @@ export default function PublicSubmissionForm({
               className="space-y-3"
             >
               {PARKING_CONDITIONS_ORDER.map((key) => (
-                <div key={key} className="flex items-start gap-3">
-                  <RadioGroupItem value={key} id={key} className="mt-0.5" />
-                  <Label htmlFor={key} className="text-sm text-muted-foreground leading-tight cursor-pointer">
+                <div key={key} className="flex items-start gap-3 flex-row-reverse justify-end">
+                  <Label htmlFor={key} className="text-sm text-muted-foreground leading-tight cursor-pointer text-right">
                     {PARKING_CONDITIONS_LABELS[key]}
                   </Label>
+                  <RadioGroupItem value={key} id={key} className="mt-0.5" />
                 </div>
               ))}
             </RadioGroup>
