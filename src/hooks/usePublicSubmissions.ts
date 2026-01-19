@@ -37,16 +37,16 @@ export function usePublicSubmissions(): UsePublicSubmissionsReturn {
     setError(null);
 
     try {
-      // Fetch all submissions except pending ones (include reporter_name for display)
+      // Use the public view which excludes sensitive PII columns (email, phone)
+      // This ensures unauthenticated users cannot access contact information
       const { data, error: fetchError } = await supabase
-        .from('bicycle_submissions')
-        .select('id, latitude, longitude, address, parking_condition, points_of_interest, other_poi_text, comments, photo_url, created_at, updated_at, status, admin_response, reporter_name')
-        .neq('status', 'hidden')
+        .from('bicycle_submissions_public' as any)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
 
-      const publicSubmissions = (data || []).map((row) => toPublicSubmission(row as any));
+      const publicSubmissions = (data || []).map((row: any) => toPublicSubmission(row));
       setSubmissions(publicSubmissions);
     } catch (err) {
       console.error('Error fetching submissions:', err);
