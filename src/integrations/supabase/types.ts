@@ -124,50 +124,40 @@ export type Database = {
           status: Database["public"]["Enums"]["submission_status"] | null
           updated_at: string | null
         }
-        Insert: {
-          address?: string | null
-          admin_response?: string | null
-          comments?: string | null
-          created_at?: string | null
-          id?: string | null
-          latitude?: number | null
-          longitude?: number | null
-          other_poi_text?: string | null
-          parking_condition?:
-            | Database["public"]["Enums"]["parking_condition"]
-            | null
-          photo_url?: string | null
-          points_of_interest?:
-            | Database["public"]["Enums"]["point_of_interest"][]
-            | null
-          reporter_name?: string | null
-          status?: Database["public"]["Enums"]["submission_status"] | null
-          updated_at?: string | null
-        }
-        Update: {
-          address?: string | null
-          admin_response?: string | null
-          comments?: string | null
-          created_at?: string | null
-          id?: string | null
-          latitude?: number | null
-          longitude?: number | null
-          other_poi_text?: string | null
-          parking_condition?:
-            | Database["public"]["Enums"]["parking_condition"]
-            | null
-          photo_url?: string | null
-          points_of_interest?:
-            | Database["public"]["Enums"]["point_of_interest"][]
-            | null
-          reporter_name?: string | null
-          status?: Database["public"]["Enums"]["submission_status"] | null
-          updated_at?: string | null
-        }
         Relationships: []
       }
     }
     Functions: {
+      get_public_submissions: {
+        Args: never
+        Returns: {
+          address: string
+          admin_response: string | null
+          comments: string | null
+          created_at: string
+          email: string | null
+          existing_spaces_count: number | null
+          id: string
+          latitude: number
+          longitude: number
+          other_poi_text: string | null
+          parking_condition: Database["public"]["Enums"]["parking_condition"]
+          phone: string | null
+          photo_url: string | null
+          points_of_interest:
+            | Database["public"]["Enums"]["point_of_interest"][]
+            | null
+          reporter_name: string | null
+          status: Database["public"]["Enums"]["submission_status"]
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "bicycle_submissions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
