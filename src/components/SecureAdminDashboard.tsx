@@ -94,21 +94,23 @@ export default function SecureAdminDashboard() {
     const headers = ['מזהה','כתובת','שם מדווח','אימייל','טלפון','קו רוחב','קו אורך','מצב חניה','עמדות קיימות','נקודות עניין','הערות','סטטוס','תאריך יצירה'];
     const rows = submissions.map((s) => [
       s.id,
-      `"${s.address}"`,
-      s.reporterName || '',
+      `"${(s.address || '').replace(/"/g, '""')}"`,
+      `"${(s.reporterName || '').replace(/"/g, '""')}"`,
       s.email || '',
       s.phone || '',
       s.latitude,
       s.longitude,
-      PARKING_CONDITIONS_LABELS[s.parkingCondition],
+      `"${PARKING_CONDITIONS_LABELS[s.parkingCondition]}"`,
       s.existingSpacesCount ?? '',
       `"${s.pointsOfInterest.map((poi) => POINTS_OF_INTEREST_LABELS[poi]).join(', ')}"`,
-      `"${s.comments || ''}"`,
-      STATUS_LABELS[s.status],
+      `"${(s.comments || '').replace(/"/g, '""')}"`,
+      `"${STATUS_LABELS[s.status]}"`,
       s.createdAt.toISOString(),
     ]);
     const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    // UTF-8 BOM is required for Excel to properly display Hebrew characters
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
