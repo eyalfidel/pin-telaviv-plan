@@ -176,6 +176,7 @@ export type Database = {
         | "commercial"
         | "transport"
         | "park"
+        | "residential"
         | "other"
       submission_status:
         | "pending"
@@ -319,6 +320,7 @@ export const Constants = {
         "commercial",
         "transport",
         "park",
+        "residential",
         "other",
       ],
       submission_status: [
