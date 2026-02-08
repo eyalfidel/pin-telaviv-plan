@@ -1,0 +1,1 @@
+ALTER TYPE public.point_of_interest ADD VALUE IF NOT EXISTS 'residential' BEFORE 'other';

@@ -1,6 +1,6 @@
 // Types that match the database schema
 export type DbParkingCondition = 'existing_needs_more' | 'none' | 'nearby';
-export type DbPointOfInterest = 'cultural' | 'educational' | 'health' | 'commercial' | 'transport' | 'park' | 'other';
+export type DbPointOfInterest = 'cultural' | 'educational' | 'health' | 'commercial' | 'transport' | 'park' | 'residential' | 'other';
 export type DbSubmissionStatus = 'pending' | 'in_review' | 'approved' | 'rejected' | 'hidden';
 
 export interface DbBicycleSubmission {
@@ -69,6 +69,7 @@ export const POINTS_OF_INTEREST_LABELS: Record<DbPointOfInterest, string> = {
   commercial: 'אזור מסחרי',
   transport: 'מרכז תחבורה ציבורית',
   park: 'פארק / מרחב ציבורי',
+  residential: 'סביבת מגורים ללא חצרות',
   other: 'אחר',
 };
 
