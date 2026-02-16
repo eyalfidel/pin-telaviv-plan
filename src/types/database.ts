@@ -36,6 +36,7 @@ export interface PublicSubmission {
   reporterName?: string;
   status: DbSubmissionStatus;
   adminResponse?: string;
+  adminPhotoUrl?: string;
   createdAt: Date;
 }
 
@@ -82,7 +83,7 @@ export const STATUS_LABELS: Record<DbSubmissionStatus, string> = {
 };
 
 // Transform database row to public submission
-export function toPublicSubmission(row: DbBicycleSubmission & { admin_response?: string | null }): PublicSubmission {
+export function toPublicSubmission(row: DbBicycleSubmission & { admin_response?: string | null; admin_photo_url?: string | null }): PublicSubmission {
   return {
     id: row.id,
     latitude: row.latitude,
@@ -96,6 +97,7 @@ export function toPublicSubmission(row: DbBicycleSubmission & { admin_response?:
     reporterName: row.reporter_name || undefined,
     status: row.status,
     adminResponse: row.admin_response || undefined,
+    adminPhotoUrl: row.admin_photo_url || undefined,
     createdAt: new Date(row.created_at),
   };
 }

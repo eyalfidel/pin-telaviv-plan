@@ -109,6 +109,7 @@ export type Database = {
       bicycle_submissions_public: {
         Row: {
           address: string | null
+          admin_photo_url: string | null
           admin_response: string | null
           comments: string | null
           created_at: string | null
@@ -126,6 +127,48 @@ export type Database = {
           reporter_name: string | null
           status: Database["public"]["Enums"]["submission_status"] | null
           updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          admin_photo_url?: string | null
+          admin_response?: string | null
+          comments?: string | null
+          created_at?: string | null
+          id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          other_poi_text?: string | null
+          parking_condition?:
+            | Database["public"]["Enums"]["parking_condition"]
+            | null
+          photo_url?: string | null
+          points_of_interest?:
+            | Database["public"]["Enums"]["point_of_interest"][]
+            | null
+          reporter_name?: string | null
+          status?: Database["public"]["Enums"]["submission_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          admin_photo_url?: string | null
+          admin_response?: string | null
+          comments?: string | null
+          created_at?: string | null
+          id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          other_poi_text?: string | null
+          parking_condition?:
+            | Database["public"]["Enums"]["parking_condition"]
+            | null
+          photo_url?: string | null
+          points_of_interest?:
+            | Database["public"]["Enums"]["point_of_interest"][]
+            | null
+          reporter_name?: string | null
+          status?: Database["public"]["Enums"]["submission_status"] | null
+          updated_at?: string | null
         }
         Relationships: []
       }

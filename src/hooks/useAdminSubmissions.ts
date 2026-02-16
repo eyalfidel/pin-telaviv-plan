@@ -19,6 +19,7 @@ export interface SubmissionUpdateData {
   email?: string;
   phone?: string;
   existingSpacesCount?: number | null;
+  photoUrl?: string;
 }
 
 interface UseAdminSubmissionsReturn {
@@ -27,7 +28,7 @@ interface UseAdminSubmissionsReturn {
   error: string | null;
   refetch: () => void;
   updateStatus: (id: string, status: DbSubmissionStatus) => Promise<boolean>;
-  updateAdminResponse: (id: string, response: string) => Promise<boolean>;
+  updateAdminResponse: (id: string, response: string, adminPhotoUrl?: string) => Promise<boolean>;
   updateSubmission: (id: string, data: SubmissionUpdateData) => Promise<boolean>;
   deleteSubmission: (id: string) => Promise<boolean>;
 }
@@ -92,18 +93,27 @@ export function useAdminSubmissions(): UseAdminSubmissionsReturn {
     }
   };
 
-  const updateAdminResponse = async (id: string, response: string): Promise<boolean> => {
+  const updateAdminResponse = async (id: string, response: string, adminPhotoUrl?: string): Promise<boolean> => {
     try {
+      const updateData: Record<string, any> = { admin_response: response || null };
+      if (adminPhotoUrl !== undefined) {
+        updateData.admin_photo_url = adminPhotoUrl;
+      }
+
       const { error: updateError } = await supabase
         .from('bicycle_submissions')
-        .update({ admin_response: response || null })
+        .update(updateData)
         .eq('id', id);
 
       if (updateError) throw updateError;
 
       // Update local state
       setSubmissions((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, adminResponse: response || undefined } : s))
+        prev.map((s) => (s.id === id ? { 
+          ...s, 
+          adminResponse: response || undefined,
+          ...(adminPhotoUrl !== undefined ? { adminPhotoUrl } : {}),
+        } : s))
       );
 
       return true;
@@ -126,6 +136,7 @@ export function useAdminSubmissions(): UseAdminSubmissionsReturn {
       if (data.email !== undefined) updateData.email = data.email || null;
       if (data.phone !== undefined) updateData.phone = data.phone || null;
       if (data.existingSpacesCount !== undefined) updateData.existing_spaces_count = data.existingSpacesCount;
+      if (data.photoUrl !== undefined) updateData.photo_url = data.photoUrl;
 
       const { error: updateError } = await supabase
         .from('bicycle_submissions')
