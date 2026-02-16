@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { 
   Download, 
   Trash2, 
@@ -9,7 +9,9 @@ import {
   Search,
   MessageSquare,
   Image as ImageIcon,
-  Pencil
+  Pencil,
+  Upload,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,6 +56,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminSubmissions, SubmissionUpdateData } from '@/hooks/useAdminSubmissions';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   DbSubmissionStatus,
   DbParkingCondition,
@@ -70,14 +73,21 @@ type ViewMode = 'table' | 'map';
 
 export default function SecureAdminDashboard() {
   const { signOut } = useAuth();
-  const { submissions, isLoading, updateStatus, updateAdminResponse, updateSubmission, deleteSubmission } = useAdminSubmissions();
+  const { submissions, isLoading, updateStatus, updateAdminResponse, updateSubmission, deleteSubmission, refetch } = useAdminSubmissions();
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<DbSubmissionStatus | 'all'>('all');
   const [editingResponseId, setEditingResponseId] = useState<string | null>(null);
   const [editingResponseText, setEditingResponseText] = useState('');
+  const [responsePhotoFile, setResponsePhotoFile] = useState<File | null>(null);
+  const [responsePhotoPreview, setResponsePhotoPreview] = useState<string | null>(null);
   const [editingSubmission, setEditingSubmission] = useState<AdminSubmission | null>(null);
   const [editFormData, setEditFormData] = useState<SubmissionUpdateData>({});
+  const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
+  const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const editPhotoInputRef = useRef<HTMLInputElement>(null);
+  const responsePhotoInputRef = useRef<HTMLInputElement>(null);
 
   const filteredSubmissions = submissions.filter((s) => {
     const matchesSearch = 
@@ -108,7 +118,6 @@ export default function SecureAdminDashboard() {
       s.createdAt.toISOString(),
     ]);
     const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    // UTF-8 BOM is required for Excel to properly display Hebrew characters
     const BOM = '\uFEFF';
     const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -157,20 +166,63 @@ export default function SecureAdminDashboard() {
     else toast.error('שגיאה במחיקה');
   };
 
+  const uploadPhoto = async (file: File, submissionId: string, prefix: string): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${prefix}_${submissionId}_${Date.now()}.${fileExt}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('submission-photos')
+      .upload(filePath, file);
+    
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      return null;
+    }
+    
+    const { data: urlData } = supabase.storage
+      .from('submission-photos')
+      .getPublicUrl(filePath);
+    
+    return urlData.publicUrl;
+  };
+
   const handleOpenResponseEdit = (id: string, currentResponse?: string) => {
     setEditingResponseId(id);
     setEditingResponseText(currentResponse || '');
+    setResponsePhotoFile(null);
+    setResponsePhotoPreview(null);
   };
 
   const handleSaveResponse = async () => {
     if (!editingResponseId) return;
-    const success = await updateAdminResponse(editingResponseId, editingResponseText);
-    if (success) {
-      toast.success('התגובה נשמרה');
-      setEditingResponseId(null);
-      setEditingResponseText('');
-    } else {
-      toast.error('שגיאה בשמירת התגובה');
+    setIsUploading(true);
+    
+    try {
+      // Upload response photo if provided
+      let adminPhotoUrl: string | undefined;
+      if (responsePhotoFile) {
+        const url = await uploadPhoto(responsePhotoFile, editingResponseId, 'admin');
+        if (!url) {
+          toast.error('שגיאה בהעלאת התמונה');
+          setIsUploading(false);
+          return;
+        }
+        adminPhotoUrl = url;
+      }
+
+      // Save text response
+      const success = await updateAdminResponse(editingResponseId, editingResponseText, adminPhotoUrl);
+      if (success) {
+        toast.success('התגובה נשמרה');
+        setEditingResponseId(null);
+        setEditingResponseText('');
+        setResponsePhotoFile(null);
+        setResponsePhotoPreview(null);
+      } else {
+        toast.error('שגיאה בשמירת התגובה');
+      }
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -187,17 +239,60 @@ export default function SecureAdminDashboard() {
       phone: submission.phone || '',
       existingSpacesCount: submission.existingSpacesCount ?? null,
     });
+    setEditPhotoFile(null);
+    setEditPhotoPreview(null);
   };
 
   const handleSaveEdit = async () => {
     if (!editingSubmission) return;
-    const success = await updateSubmission(editingSubmission.id, editFormData);
-    if (success) {
-      toast.success('הפרטים עודכנו בהצלחה');
-      setEditingSubmission(null);
-      setEditFormData({});
-    } else {
-      toast.error('שגיאה בעדכון הפרטים');
+    setIsUploading(true);
+
+    try {
+      // Upload new photo if provided
+      let photoUrl: string | undefined;
+      if (editPhotoFile) {
+        const url = await uploadPhoto(editPhotoFile, editingSubmission.id, 'report');
+        if (!url) {
+          toast.error('שגיאה בהעלאת התמונה');
+          setIsUploading(false);
+          return;
+        }
+        photoUrl = url;
+      }
+
+      const dataToUpdate = { ...editFormData };
+      if (photoUrl) {
+        (dataToUpdate as any).photoUrl = photoUrl;
+      }
+
+      const success = await updateSubmission(editingSubmission.id, dataToUpdate);
+      if (success) {
+        toast.success('הפרטים עודכנו בהצלחה');
+        setEditingSubmission(null);
+        setEditFormData({});
+        setEditPhotoFile(null);
+        setEditPhotoPreview(null);
+      } else {
+        toast.error('שגיאה בעדכון הפרטים');
+      }
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleEditPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEditPhotoFile(file);
+      setEditPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleResponsePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setResponsePhotoFile(file);
+      setResponsePhotoPreview(URL.createObjectURL(file));
     }
   };
 
@@ -360,17 +455,48 @@ export default function SecureAdminDashboard() {
             <DialogHeader>
               <DialogTitle>עריכת תגובה</DialogTitle>
             </DialogHeader>
-            <div className="py-4">
-              <Textarea
-                value={editingResponseText}
-                onChange={(e) => setEditingResponseText(e.target.value)}
-                placeholder="הזן תגובה שתוצג לציבור..."
-                className="min-h-[120px]"
-              />
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>תגובת הצוות</Label>
+                <Textarea
+                  value={editingResponseText}
+                  onChange={(e) => setEditingResponseText(e.target.value)}
+                  placeholder="הזן תגובה שתוצג לציבור..."
+                  className="min-h-[120px]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>תמונת מצב סופי</Label>
+                <p className="text-xs text-muted-foreground">תמונה זו תוצג בדיווח עם תגית &quot;מצב סופי&quot;</p>
+                <input
+                  ref={responsePhotoInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleResponsePhotoChange}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => responsePhotoInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4 ml-2" />
+                  העלאת תמונה
+                </Button>
+                {responsePhotoPreview && (
+                  <div className="mt-2">
+                    <img src={responsePhotoPreview} alt="תצוגה מקדימה" className="w-full max-h-32 object-cover rounded border border-border" />
+                  </div>
+                )}
+              </div>
             </div>
             <DialogFooter className="flex-row-reverse gap-2">
               <Button variant="outline" onClick={() => setEditingResponseId(null)}>ביטול</Button>
-              <Button onClick={handleSaveResponse}>שמור תגובה</Button>
+              <Button onClick={handleSaveResponse} disabled={isUploading}>
+                {isUploading && <Loader2 className="h-4 w-4 ml-2 animate-spin" />}
+                שמור תגובה
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -391,6 +517,39 @@ export default function SecureAdminDashboard() {
                     value={editFormData.address || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
                   />
+                </div>
+
+                {/* Photo Upload */}
+                <div className="space-y-2">
+                  <Label>תמונת דיווח</Label>
+                  {editingSubmission?.photoUrl && !editPhotoPreview && (
+                    <div className="mb-2">
+                      <img src={editingSubmission.photoUrl} alt="תמונה נוכחית" className="w-full max-h-32 object-cover rounded border border-border" />
+                      <p className="text-xs text-muted-foreground mt-1">תמונה נוכחית</p>
+                    </div>
+                  )}
+                  <input
+                    ref={editPhotoInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleEditPhotoChange}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => editPhotoInputRef.current?.click()}
+                  >
+                    <Upload className="h-4 w-4 ml-2" />
+                    {editingSubmission?.photoUrl ? 'החלפת תמונה' : 'העלאת תמונה'}
+                  </Button>
+                  {editPhotoPreview && (
+                    <div className="mt-2">
+                      <img src={editPhotoPreview} alt="תצוגה מקדימה" className="w-full max-h-32 object-cover rounded border border-border" />
+                      <p className="text-xs text-muted-foreground mt-1">תמונה חדשה</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Parking Condition */}
@@ -513,7 +672,10 @@ export default function SecureAdminDashboard() {
             </ScrollArea>
             <DialogFooter className="flex-row-reverse gap-2">
               <Button variant="outline" onClick={() => setEditingSubmission(null)}>ביטול</Button>
-              <Button onClick={handleSaveEdit}>שמור שינויים</Button>
+              <Button onClick={handleSaveEdit} disabled={isUploading}>
+                {isUploading && <Loader2 className="h-4 w-4 ml-2 animate-spin" />}
+                שמור שינויים
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

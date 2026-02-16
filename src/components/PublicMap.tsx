@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { PublicSubmission, PARKING_CONDITIONS_LABELS, DbSubmissionStatus } from '@/types/database';
@@ -184,8 +184,28 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick }: 
           border-radius: 8px;
           border-right: 3px solid ${statusColor};
         ">
-          <p style="margin: 0; font-size: 11px; color: #0369a1; font-weight: 500;">תגובה:</p>
+          <p style="margin: 0; font-size: 11px; color: #0369a1; font-weight: 500;">
+            <span style="background: #dbeafe; padding: 1px 6px; border-radius: 4px; font-size: 10px;">נוסף על ידי הצוות</span>
+          </p>
           <p style="margin: 4px 0 0; font-size: 12px; color: #0c4a6e;">${submission.adminResponse}</p>
+        </div>
+      ` : '';
+
+      const adminPhotoHtml = submission.adminPhotoUrl ? `
+        <div style="margin: 8px 0;">
+          <p style="margin: 0 0 4px; font-size: 11px;">
+            <span style="background: #dcfce7; color: #166534; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 500;">מצב סופי</span>
+          </p>
+          <a href="${submission.adminPhotoUrl}" target="_blank" rel="noopener noreferrer">
+            <img src="${submission.adminPhotoUrl}" alt="מצב סופי" style="
+              width: 100%;
+              max-height: 120px;
+              object-fit: cover;
+              border-radius: 8px;
+              cursor: pointer;
+              border: 1px solid #bbf7d0;
+            " />
+          </a>
         </div>
       ` : '';
 
@@ -218,6 +238,7 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick }: 
             ${statusLabel}
           </span>
           ${adminResponseHtml}
+          ${adminPhotoHtml}
           <p style="margin: 4px 0; font-size: 10px; color: #aaa;">
             ${submission.createdAt.toLocaleDateString('he-IL')}
           </p>
@@ -249,5 +270,35 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick }: 
     }
   }, [pendingLocation]);
 
-  return <div ref={mapContainer} className="w-full h-full" />;
+  const [legendOpen, setLegendOpen] = useState(false);
+
+  return (
+    <div className="relative w-full h-full">
+      <div ref={mapContainer} className="w-full h-full" />
+      
+      {/* Legend */}
+      <div className="absolute bottom-4 right-4 z-[1000]">
+        <button
+          onClick={() => setLegendOpen(!legendOpen)}
+          className="bg-card/95 backdrop-blur-sm rounded-lg shadow-civic border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-accent transition-colors"
+        >
+          🎨 מקרא צבעים
+        </button>
+        {legendOpen && (
+          <div className="absolute bottom-10 right-0 bg-card/95 backdrop-blur-sm rounded-lg shadow-civic border border-border p-3 min-w-[200px] animate-fade-in">
+            <p className="text-xs font-semibold text-foreground mb-2">סטטוס דיווחים</p>
+            {(Object.keys(STATUS_COLORS) as DbSubmissionStatus[]).filter(s => s !== 'hidden').map((status) => (
+              <div key={status} className="flex items-center gap-2 py-1">
+                <span
+                  style={{ background: STATUS_COLORS[status] }}
+                  className="w-4 h-4 rounded-full inline-block border border-white shadow-sm"
+                />
+                <span className="text-xs text-foreground">{STATUS_LABELS[status]}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
