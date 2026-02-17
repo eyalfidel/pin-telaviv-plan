@@ -72,7 +72,7 @@ const Index = () => {
         {/* Filter Toggle Button */}
         <Button
           onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-          className={`absolute top-4 right-4 z-[1000] shadow-civic ${
+          className={`absolute top-4 left-4 z-[1000] shadow-civic ${
             hasActiveFilters ? 'bg-accent text-accent-foreground' : ''
           }`}
           variant={hasActiveFilters ? 'default' : 'secondary'}
@@ -96,7 +96,7 @@ const Index = () => {
         />
 
         {/* Instructions Card */}
-        <div className="absolute bottom-6 left-4 right-4 sm:right-auto sm:left-4 sm:w-80 z-[1000]">
+        <div className="absolute bottom-6 right-4 sm:left-auto sm:right-4 sm:w-80 z-[1000]">
           <div className="bg-card/95 backdrop-blur-sm rounded-lg shadow-civic border border-border p-4 animate-fade-in">
             <div className="flex items-start gap-3">
               <div className="bg-primary/10 p-2 rounded-lg shrink-0">

@@ -282,7 +282,7 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick }: 
           onClick={() => setLegendOpen(!legendOpen)}
           className="bg-card/95 backdrop-blur-sm rounded-lg shadow-civic border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-accent transition-colors"
         >
-          🎨 מקרא צבעים
+          🎨 מקרא
         </button>
         {legendOpen && (
           <div className="absolute bottom-10 right-0 bg-card/95 backdrop-blur-sm rounded-lg shadow-civic border border-border p-3 min-w-[200px] animate-fade-in">
