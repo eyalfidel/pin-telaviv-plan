@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { PublicSubmission, PARKING_CONDITIONS_LABELS, DbSubmissionStatus } from '@/types/database';
@@ -270,35 +270,7 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick }: 
     }
   }, [pendingLocation]);
 
-  const [legendOpen, setLegendOpen] = useState(false);
-
   return (
-    <div className="relative w-full h-full">
-      <div ref={mapContainer} className="w-full h-full" />
-      
-      {/* Legend */}
-      <div className="absolute bottom-4 right-4 z-[1000]">
-        <button
-          onClick={() => setLegendOpen(!legendOpen)}
-          className="bg-card/95 backdrop-blur-sm rounded-lg shadow-civic border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-accent transition-colors"
-        >
-          🎨 מקרא
-        </button>
-        {legendOpen && (
-          <div className="absolute bottom-10 right-0 bg-card/95 backdrop-blur-sm rounded-lg shadow-civic border border-border p-3 min-w-[200px] animate-fade-in">
-            <p className="text-xs font-semibold text-foreground mb-2">סטטוס דיווחים</p>
-            {(Object.keys(STATUS_COLORS) as DbSubmissionStatus[]).filter(s => s !== 'hidden').map((status) => (
-              <div key={status} className="flex items-center gap-2 py-1">
-                <span
-                  style={{ background: STATUS_COLORS[status] }}
-                  className="w-4 h-4 rounded-full inline-block border border-white shadow-sm"
-                />
-                <span className="text-xs text-foreground">{STATUS_LABELS[status]}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    <div ref={mapContainer} className="w-full h-full" />
   );
 }
