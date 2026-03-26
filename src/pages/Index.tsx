@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { DbSubmissionStatus } from '@/types/database';
-import { Filter, Info, MapPin, ExternalLink } from 'lucide-react';
+import { Filter, Info, MapPin, ExternalLink, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
