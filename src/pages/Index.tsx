@@ -143,8 +143,8 @@ const Index = () => {
           onClearFilters={clearFilters}
         />
 
-        {/* Instructions Card */}
-        <div className="absolute bottom-6 right-4 sm:left-auto sm:right-4 sm:w-80 z-[1000]">
+        {/* Emergency Notice + Instructions Card */}
+        <div className="absolute bottom-6 right-4 sm:left-auto sm:right-4 sm:w-80 z-[1000] flex flex-col gap-3">
           <div className="bg-card/95 backdrop-blur-sm rounded-lg shadow-civic border border-border p-4 animate-fade-in">
             <div className="flex items-start gap-3">
               <div className="bg-primary/10 p-2 rounded-lg shrink-0">
