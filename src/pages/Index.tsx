@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { DbSubmissionStatus } from '@/types/database';
-import { Filter, Info, MapPin, ExternalLink } from 'lucide-react';
+import { Filter, Info, MapPin, ExternalLink, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
@@ -146,12 +146,15 @@ const Index = () => {
         {/* Emergency Notice + Instructions Card */}
         <div className="absolute bottom-6 right-4 sm:left-auto sm:right-4 sm:w-80 z-[1000] flex flex-col gap-3">
           {/* Emergency Notice */}
-          <div className="bg-yellow-100 border border-yellow-400 rounded-lg shadow-civic p-3 animate-fade-in">
-            <p className="text-xs text-foreground leading-relaxed text-right">
-              <span className="font-bold" style={{ color: 'hsl(345, 60%, 25%)' }}>שימו לב</span>
-              {' - '}
-              בשל מצב החירום, תהליך המיפוי והטיפול בעמדות הקשירה לאופניים יתעכב, עמכם הסליחה.
-            </p>
+          <div className="bg-yellow-100 border-2 border-red-500 rounded-lg shadow-civic p-3 animate-fade-in">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5 text-red-500" />
+              <p className="text-xs text-foreground leading-relaxed text-right">
+                <span className="font-bold" style={{ color: 'hsl(0, 70%, 40%)' }}>שימו לב</span>
+                {' - '}
+                בשל מצב החירום, תהליך המיפוי והטיפול בעמדות הקשירה לאופניים יתעכב, עמכם הסליחה.
+              </p>
+            </div>
           </div>
 
           {/* Instructions Card */}
