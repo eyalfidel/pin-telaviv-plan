@@ -143,8 +143,18 @@ const Index = () => {
           onClearFilters={clearFilters}
         />
 
-        {/* Instructions Card */}
-        <div className="absolute bottom-6 right-4 sm:left-auto sm:right-4 sm:w-80 z-[1000]">
+        {/* Emergency Notice + Instructions Card */}
+        <div className="absolute bottom-6 right-4 sm:left-auto sm:right-4 sm:w-80 z-[1000] flex flex-col gap-3">
+          {/* Emergency Notice */}
+          <div className="bg-yellow-100 border border-yellow-400 rounded-lg shadow-civic p-3 animate-fade-in">
+            <p className="text-xs text-foreground leading-relaxed text-right">
+              <span className="font-bold" style={{ color: 'hsl(345, 60%, 25%)' }}>שימו לב</span>
+              {' - '}
+              בשל מצב החירום, תהליך המיפוי והטיפול בעמדות הקשירה לאופניים יתעכב, עמכם הסליחה.
+            </p>
+          </div>
+
+          {/* Instructions Card */}
           <div className="bg-card/95 backdrop-blur-sm rounded-lg shadow-civic border border-border p-4 animate-fade-in">
             <div className="flex items-start gap-3">
               <div className="bg-primary/10 p-2 rounded-lg shrink-0">
