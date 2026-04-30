@@ -53,7 +53,17 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
+// @ts-ignore - no types
+import * as shpwrite from '@mapbox/shp-write';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminSubmissions, SubmissionUpdateData } from '@/hooks/useAdminSubmissions';
 import { supabase } from '@/integrations/supabase/client';
