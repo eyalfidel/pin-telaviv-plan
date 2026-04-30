@@ -164,7 +164,102 @@ export default function SecureAdminDashboard() {
     toast.success('הקובץ יוצא בהצלחה');
   };
 
-  const handleStatusChange = async (id: string, newStatus: DbSubmissionStatus) => {
+  const escapeXml = (str: string) =>
+    String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+
+  const exportToKML = () => {
+    const placemarks = submissions.map((s) => {
+      const name = escapeXml(s.address || 'נקודת חניה');
+      const desc = escapeXml(
+        [
+          `סטטוס: ${STATUS_LABELS[s.status]}`,
+          `מצב חניה: ${PARKING_CONDITIONS_LABELS[s.parkingCondition]}`,
+          s.existingSpacesCount != null ? `עמדות קיימות: ${s.existingSpacesCount}` : '',
+          s.pointsOfInterest.length
+            ? `נקודות עניין: ${s.pointsOfInterest.map((p) => POINTS_OF_INTEREST_LABELS[p]).join(', ')}`
+            : '',
+          s.comments ? `הערות: ${s.comments}` : '',
+          `תאריך: ${s.createdAt.toLocaleDateString('he-IL')}`,
+        ]
+          .filter(Boolean)
+          .join('\n')
+      );
+      return `    <Placemark>
+      <name>${name}</name>
+      <description><![CDATA[${desc}]]></description>
+      <Point><coordinates>${s.longitude},${s.latitude},0</coordinates></Point>
+    </Placemark>`;
+    }).join('\n');
+
+    const kml = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>חניות אופניים - תל אביב</name>
+${placemarks}
+  </Document>
+</kml>`;
+
+    const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'bicycle-parking-submissions.kml';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('הקובץ יוצא בהצלחה (KML)');
+  };
+
+  const exportToShapefile = async () => {
+    try {
+      const geojson = {
+        type: 'FeatureCollection',
+        features: submissions.map((s) => ({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [s.longitude, s.latitude] },
+          properties: {
+            // Shapefile DBF field names limited to 10 chars ASCII
+            id: s.id.slice(0, 8),
+            address: (s.address || '').slice(0, 200),
+            reporter: (s.reporterName || '').slice(0, 100),
+            email: (s.email || '').slice(0, 100),
+            phone: (s.phone || '').slice(0, 30),
+            condition: PARKING_CONDITIONS_LABELS[s.parkingCondition].slice(0, 200),
+            spaces: s.existingSpacesCount ?? 0,
+            poi: s.pointsOfInterest.map((p) => POINTS_OF_INTEREST_LABELS[p]).join('; ').slice(0, 200),
+            comments: (s.comments || '').slice(0, 250),
+            status: STATUS_LABELS[s.status],
+            created: s.createdAt.toISOString().slice(0, 10),
+          },
+        })),
+      };
+
+      const options = {
+        folder: 'bicycle-parking',
+        filename: 'bicycle-parking',
+        outputType: 'blob',
+        compression: 'DEFLATE',
+        types: { point: 'bicycle_parking' },
+      };
+
+      const result: any = await shpwrite.zip(geojson, options);
+      const blob = result instanceof Blob ? result : new Blob([result], { type: 'application/zip' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'bicycle-parking-shapefile.zip';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('הקובץ יוצא בהצלחה (Shapefile)');
+    } catch (err) {
+      console.error('Shapefile export error:', err);
+      toast.error('שגיאה בייצוא Shapefile');
+    }
+  };
     const success = await updateStatus(id, newStatus);
     if (success) toast.success(`הסטטוס עודכן`);
     else toast.error('שגיאה בעדכון הסטטוס');
