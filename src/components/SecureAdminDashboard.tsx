@@ -260,6 +260,8 @@ ${placemarks}
       toast.error('שגיאה בייצוא Shapefile');
     }
   };
+
+  const handleStatusChange = async (id: string, newStatus: DbSubmissionStatus) => {
     const success = await updateStatus(id, newStatus);
     if (success) toast.success(`הסטטוס עודכן`);
     else toast.error('שגיאה בעדכון הסטטוס');
