@@ -454,8 +454,35 @@ ${placemarks}
                   <Map className="h-4 w-4 ml-1" />מפה
                 </Button>
               </div>
-              <Button variant="outline" size="sm" onClick={exportToCSV}><Download className="h-4 w-4 ml-1" />CSV</Button>
-              <Button variant="outline" size="sm" onClick={exportToGeoJSON}><Download className="h-4 w-4 ml-1" />GeoJSON</Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 ml-1" />
+                    הורדה
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="z-[1000]">
+                  <DropdownMenuLabel>פורמטים לטבלה</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={exportToCSV}>
+                    <Download className="h-4 w-4 ml-2" />
+                    CSV (Excel)
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>שכבות GIS</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={exportToGeoJSON}>
+                    <Download className="h-4 w-4 ml-2" />
+                    GeoJSON (.geojson)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportToShapefile}>
+                    <Download className="h-4 w-4 ml-2" />
+                    Shapefile (.zip)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportToKML}>
+                    <Download className="h-4 w-4 ml-2" />
+                    KML (Google Earth)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="ghost" size="sm" onClick={signOut}><LogOut className="h-4 w-4 ml-1" />התנתק</Button>
             </div>
           </div>
