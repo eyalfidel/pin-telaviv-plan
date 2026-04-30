@@ -246,7 +246,7 @@ ${placemarks}
         types: { point: 'bicycle_parking' },
       };
 
-      const result: any = await shpwrite.zip(geojson, options);
+      const result: any = await shpwrite.zip(geojson as any, options as any);
       const blob = result instanceof Blob ? result : new Blob([result], { type: 'application/zip' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
