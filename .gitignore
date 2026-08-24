@@ -17,6 +17,12 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+# Contains real submitter data (names, comments, addresses) — even
+# though it's already publicly visible on the live map, don't also
+# commit a portable dump of it.
+supabase/SEED_REAL_DATA.sql
+supabase/RUN_IN_NEW_SUPABASE_PROJECT.sql
 *.suo
 *.ntvs*
 *.njsproj
