@@ -104,6 +104,27 @@ export type Database = {
         }
         Relationships: []
       }
+      // NOTE: added by hand to match the
+      // 20260902070000_add_site_settings_submission_toggle.sql migration —
+      // regenerate with `supabase gen types` once reconnected to replace this.
+      site_settings: {
+        Row: {
+          id: boolean
+          submissions_open: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          submissions_open?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          submissions_open?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       bicycle_submissions_public: {

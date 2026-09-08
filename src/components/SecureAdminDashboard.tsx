@@ -1,9 +1,9 @@
 import { useState, useRef } from 'react';
-import { 
-  Download, 
-  Trash2, 
-  LogOut, 
-  Table as TableIcon, 
+import {
+  Download,
+  Trash2,
+  LogOut,
+  Table as TableIcon,
   Map,
   Filter,
   Search,
@@ -11,11 +11,14 @@ import {
   Image as ImageIcon,
   Pencil,
   Upload,
-  Loader2
+  Loader2,
+  Lock,
+  Unlock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -66,6 +69,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import * as shpwrite from '@mapbox/shp-write';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminSubmissions, SubmissionUpdateData } from '@/hooks/useAdminSubmissions';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   DbSubmissionStatus,
@@ -84,6 +88,8 @@ type ViewMode = 'table' | 'map';
 export default function SecureAdminDashboard() {
   const { signOut } = useAuth();
   const { submissions, isLoading, updateStatus, updateAdminResponse, updateSubmission, deleteSubmission, refetch } = useAdminSubmissions();
+  const { submissionsOpen, isLoading: isSettingsLoading, setSubmissionsOpen } = useSiteSettings();
+  const [isTogglingSubmissions, setIsTogglingSubmissions] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<DbSubmissionStatus | 'all'>('all');
@@ -273,6 +279,17 @@ ${placemarks}
     else toast.error('שגיאה במחיקה');
   };
 
+  const handleToggleSubmissions = async (open: boolean) => {
+    setIsTogglingSubmissions(true);
+    const success = await setSubmissionsOpen(open);
+    setIsTogglingSubmissions(false);
+    if (success) {
+      toast.success(open ? 'המפה פתוחה לדיווחים חדשים' : 'המפה סגורה לדיווחים חדשים');
+    } else {
+      toast.error('שגיאה בעדכון סטטוס הדיווחים');
+    }
+  };
+
   const uploadPhoto = async (file: File, submissionId: string, prefix: string): Promise<string | null> => {
     const fileExt = file.name.split('.').pop();
     const filePath = `${prefix}_${submissionId}_${Date.now()}.${fileExt}`;
@@ -446,6 +463,22 @@ ${placemarks}
               <p className="text-sm text-muted-foreground">ניהול הגשות חניית אופניים (גישה מאובטחת)</p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 bg-muted/30">
+                {submissionsOpen ? (
+                  <Unlock className="h-4 w-4 text-success" />
+                ) : (
+                  <Lock className="h-4 w-4 text-destructive" />
+                )}
+                <Label htmlFor="submissions-open-toggle" className="text-sm font-medium cursor-pointer">
+                  {submissionsOpen ? 'דיווחים חדשים פתוחים' : 'דיווחים חדשים סגורים'}
+                </Label>
+                <Switch
+                  id="submissions-open-toggle"
+                  checked={submissionsOpen}
+                  disabled={isSettingsLoading || isTogglingSubmissions}
+                  onCheckedChange={handleToggleSubmissions}
+                />
+              </div>
               <div className="flex rounded-lg border border-border overflow-hidden">
                 <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('table')} className="rounded-none">
                   <TableIcon className="h-4 w-4 ml-1" />טבלה

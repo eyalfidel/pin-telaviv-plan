@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { DbSubmissionStatus } from '@/types/database';
-import { Filter, Info, MapPin, ExternalLink, AlertTriangle } from 'lucide-react';
+import { Filter, Info, MapPin, ExternalLink, AlertTriangle, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
@@ -9,7 +9,9 @@ import PublicFilters from '@/components/PublicFilters';
 import PublicSubmissionForm from '@/components/PublicSubmissionForm';
 import IntroDialog from '@/components/IntroDialog';
 import { usePublicSubmissions } from '@/hooks/usePublicSubmissions';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { reverseGeocode } from '@/lib/geocoding';
+import { toast } from 'sonner';
 
 const STATUS_COLORS: Record<DbSubmissionStatus, string> = {
   pending: 'hsl(48, 96%, 53%)',
@@ -59,28 +61,34 @@ const Index = () => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [pendingLocation, setPendingLocation] = useState<{ lat: number; lng: number; address?: string } | null>(null);
   
-  const { 
-    getFilteredSubmissions, 
-    filters, 
-    setFilters, 
+  const {
+    getFilteredSubmissions,
+    filters,
+    setFilters,
     clearFilters,
     refetch,
-    isLoading 
+    isLoading
   } = usePublicSubmissions();
+  const { submissionsOpen } = useSiteSettings();
 
   const filteredSubmissions = getFilteredSubmissions();
   const hasActiveFilters = filters.parkingConditions.length > 0 || filters.pointsOfInterest.length > 0;
 
   const handleMapClick = useCallback(async (lat: number, lng: number) => {
+    if (!submissionsOpen) {
+      toast.error('דיווחים חדשים סגורים כרגע. אפשר עדיין לצפות בכל הדיווחים הקיימים על המפה.');
+      return;
+    }
+
     // Set location immediately to show the form
     setPendingLocation({ lat, lng });
-    
+
     // Fetch address in background
     const address = await reverseGeocode(lat, lng);
     if (address) {
       setPendingLocation(prev => prev ? { ...prev, address } : null);
     }
-  }, []);
+  }, [submissionsOpen]);
 
   const handleFormClose = () => {
     setPendingLocation(null);
@@ -159,20 +167,36 @@ const Index = () => {
 
           {/* Instructions Card */}
           <div className="bg-card/95 backdrop-blur-sm rounded-lg shadow-civic border border-border p-4 animate-fade-in">
-            <div className="flex items-start gap-3">
-              <div className="bg-primary/10 p-2 rounded-lg shrink-0">
-                <MapPin className="h-5 w-5 text-primary" />
+            {submissionsOpen ? (
+              <div className="flex items-start gap-3">
+                <div className="bg-primary/10 p-2 rounded-lg shrink-0">
+                  <MapPin className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-sm">
+                    דווחו על מיקום חדש
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    לחצו בכל מקום על המפה כדי לדווח על מיקום שזקוק לחניית אופניים.
+                    התרומה שלכם עוזרת לעצב את תשתית הרכיבה בתל אביב-יפו.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold text-foreground text-sm">
-                  דווחו על מיקום חדש
-                </h3>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  לחצו בכל מקום על המפה כדי לדווח על מיקום שזקוק לחניית אופניים. 
-                  התרומה שלכם עוזרת לעצב את תשתית הרכיבה בתל אביב-יפו.
-                </p>
+            ) : (
+              <div className="flex items-start gap-3">
+                <div className="bg-muted p-2 rounded-lg shrink-0">
+                  <Lock className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-sm">
+                    דיווחים חדשים סגורים זמנית
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    אפשר עדיין לצפות בכל הדיווחים הקיימים על המפה. נעדכן כאן ברגע שהמערכת תיפתח מחדש לדיווחים חדשים.
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
               <span className="text-xs text-muted-foreground">
                 {filteredSubmissions.length} מיקומים מוצגים
