@@ -12,7 +12,9 @@ L.Icon.Default.mergeOptions({
 });
 
 // Status colors for markers (ordered: pending=yellow, in_review=blue, approved=green, rejected=red, hidden=gray)
-const STATUS_COLORS: Record<DbSubmissionStatus, string> = {
+// Exported so other map views (e.g. the admin dashboard's map legend) can
+// reuse the same colors instead of redefining them.
+export const STATUS_COLORS: Record<DbSubmissionStatus, string> = {
   pending: 'hsl(48, 96%, 53%)',      // Yellow - pending
   in_review: 'hsl(207, 70%, 45%)',   // Blue - in review
   approved: 'hsl(142, 70%, 40%)',    // Green - approved
@@ -97,10 +99,17 @@ const pendingIcon = L.divIcon({
 interface PublicMapProps {
   submissions: PublicSubmission[];
   pendingLocation?: { lat: number; lng: number } | null;
-  onMapClick: (lat: number, lng: number) => void;
+  // Optional: the public map uses this to drop a pin and open the report
+  // form. The admin map view omits it - admins shouldn't create reports
+  // by clicking the map.
+  onMapClick?: (lat: number, lng: number) => void;
+  // Optional: fires in addition to the normal popup when a marker is
+  // clicked. Used by the admin map view to open the edit dialog for that
+  // submission.
+  onMarkerClick?: (submission: PublicSubmission) => void;
 }
 
-export default function PublicMap({ submissions, pendingLocation, onMapClick }: PublicMapProps) {
+export default function PublicMap({ submissions, pendingLocation, onMapClick, onMarkerClick }: PublicMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
@@ -131,9 +140,10 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick }: 
     // Initialize markers layer group
     markersRef.current = L.layerGroup().addTo(mapRef.current);
 
-    // Handle map click to drop pin
+    // Handle map click to drop pin (public map only - onMapClick is
+    // omitted in the admin map view)
     mapRef.current.on('click', (e: L.LeafletMouseEvent) => {
-      onMapClick(e.latlng.lat, e.latlng.lng);
+      onMapClick?.(e.latlng.lat, e.latlng.lng);
     });
 
     return () => {
@@ -245,9 +255,15 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick }: 
         </div>
       `);
 
+      // Admin map view: also open the edit dialog for this submission on
+      // click, alongside the normal popup.
+      if (onMarkerClick) {
+        marker.on('click', () => onMarkerClick(submission));
+      }
+
       marker.addTo(markersRef.current!);
     });
-  }, [submissions]);
+  }, [submissions, onMarkerClick]);
 
   // Handle pending location marker
   useEffect(() => {

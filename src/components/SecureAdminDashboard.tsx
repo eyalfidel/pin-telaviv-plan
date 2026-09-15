@@ -65,6 +65,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import AdminMapView from '@/components/AdminMapView';
 // @ts-ignore - no types
 import * as shpwrite from '@mapbox/shp-write';
 import { useAuth } from '@/hooks/useAuth';
@@ -544,6 +545,7 @@ ${placemarks}
           </Select>
         </div>
         <div className="bg-card rounded-lg border border-border overflow-hidden">
+          {viewMode === 'table' ? (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader><TableRow><TableHead>כתובת</TableHead><TableHead>תמונה</TableHead><TableHead>שם מדווח</TableHead><TableHead>פרטי קשר</TableHead><TableHead>מצב חניה</TableHead><TableHead>עמדות קיימות</TableHead><TableHead>סטטוס</TableHead><TableHead>תגובה</TableHead><TableHead>תאריך</TableHead><TableHead className="text-left">פעולות</TableHead></TableRow></TableHeader>
@@ -556,9 +558,9 @@ ${placemarks}
                     <TableCell>
                       {s.photoUrl ? (
                         <a href={s.photoUrl} target="_blank" rel="noopener noreferrer" className="block">
-                          <img 
-                            src={s.photoUrl} 
-                            alt="תמונה" 
+                          <img
+                            src={s.photoUrl}
+                            alt="תמונה"
                             className="w-12 h-12 object-cover rounded border border-border hover:opacity-80 transition-opacity cursor-pointer"
                           />
                         </a>
@@ -580,9 +582,9 @@ ${placemarks}
                         ) : (
                           <span className="text-xs text-muted-foreground">-</span>
                         )}
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className="h-6 w-6"
                           onClick={() => handleOpenResponseEdit(s.id, s.adminResponse)}
                         >
@@ -614,6 +616,11 @@ ${placemarks}
               </TableBody>
             </Table>
           </div>
+          ) : (
+          <div className="relative h-[70vh] min-h-[500px]">
+            <AdminMapView submissions={filteredSubmissions} onMarkerClick={handleOpenEdit} />
+          </div>
+          )}
         </div>
 
         {/* Admin Response Edit Dialog */}
