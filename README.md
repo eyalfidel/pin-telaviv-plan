@@ -87,3 +87,28 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Deployment
+
+This is no longer served from Lovable. Every push to `main` runs
+`.github/workflows/deploy.yml`, which builds the app and publishes it via
+GitHub Pages to the custom domain in `public/CNAME`
+(**bikepark.meitallehavi.com**).
+
+## Keeping the Supabase project awake
+
+Supabase's Free plan auto-pauses a project after about 7 days with no
+database activity. Two independent, redundant pings keep that from ever
+happening again:
+
+1. `.github/workflows/supabase-keepalive.yml` — a daily GitHub Actions job
+   that does one harmless, read-only `SELECT` against `site_settings`.
+2. An external ping via [cron-job.org](https://cron-job.org) (or similar),
+   hitting the same endpoint independently of GitHub's scheduler:
+   - URL: `https://mawyyatwjpqyfdhdshzh.supabase.co/rest/v1/site_settings?select=id&limit=1`
+   - Header: `apikey: <VITE_SUPABASE_PUBLISHABLE_KEY from .env>`
+   - Method: GET, at least every few days.
+
+Neither one writes anything, so neither shows up on the public map or in
+the admin dashboard. If GitHub's scheduler ever skips a run, the external
+ping still covers it, and vice versa.

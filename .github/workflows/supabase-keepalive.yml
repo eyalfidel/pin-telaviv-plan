@@ -1,8 +1,15 @@
 name: Supabase keep-alive
 
+# Runs daily rather than weekly on purpose: GitHub occasionally delays or
+# drops a scheduled run under load, and Supabase pauses a project after 7
+# days with no activity. Daily leaves a full week of margin even if a
+# single run gets skipped. There's also an independent external ping
+# (cron-job.org) hitting the same endpoint, so this doesn't depend on
+# GitHub Actions' scheduler alone - see README.
+
 on:
   schedule:
-    - cron: '0 6 * * 0'
+    - cron: '0 6 * * *'
   workflow_dispatch: {}
 
 jobs:
