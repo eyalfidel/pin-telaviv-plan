@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Download,
   Trash2,
@@ -13,7 +14,8 @@ import {
   Upload,
   Loader2,
   Lock,
-  Unlock
+  Unlock,
+  Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -540,6 +542,9 @@ ${placemarks}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <Link to="/admin/users">
+                <Button variant="ghost" size="sm"><Users className="h-4 w-4 ml-1" />ניהול אדמינים</Button>
+              </Link>
               <Button variant="ghost" size="sm" onClick={signOut}><LogOut className="h-4 w-4 ml-1" />התנתק</Button>
             </div>
           </div>
