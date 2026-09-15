@@ -19,6 +19,7 @@ export default function AdminMapView({ submissions, onMarkerClick }: AdminMapVie
       <PublicMap
         submissions={submissions}
         onMarkerClick={(submission) => onMarkerClick(submission as AdminSubmission)}
+        emptyMessage="לא נמצאו דיווחים התואמים את הסינון"
       />
 
       <div className="absolute top-3 left-3 z-[500]">

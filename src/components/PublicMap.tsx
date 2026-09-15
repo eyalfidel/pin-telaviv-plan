@@ -107,9 +107,14 @@ interface PublicMapProps {
   // clicked. Used by the admin map view to open the edit dialog for that
   // submission.
   onMarkerClick?: (submission: PublicSubmission) => void;
+  // Optional centered overlay shown when there are zero submissions to
+  // display. Left undefined by the public page, so its behavior is
+  // unchanged; the admin map view opts in, since an empty admin map
+  // always means "the current filters matched nothing."
+  emptyMessage?: string;
 }
 
-export default function PublicMap({ submissions, pendingLocation, onMapClick, onMarkerClick }: PublicMapProps) {
+export default function PublicMap({ submissions, pendingLocation, onMapClick, onMarkerClick, emptyMessage }: PublicMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
@@ -287,6 +292,15 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick, on
   }, [pendingLocation]);
 
   return (
-    <div ref={mapContainer} className="w-full h-full" />
+    <div className="relative w-full h-full">
+      <div ref={mapContainer} className="w-full h-full" />
+      {emptyMessage && submissions.length === 0 && (
+        <div className="absolute inset-0 z-[400] flex items-center justify-center pointer-events-none">
+          <div className="bg-card/95 backdrop-blur-sm rounded-lg shadow-civic border border-border px-4 py-3 text-sm text-muted-foreground">
+            {emptyMessage}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

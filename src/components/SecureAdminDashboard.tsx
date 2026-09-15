@@ -66,6 +66,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import AdminMapView from '@/components/AdminMapView';
+import AdminFilterPanel from '@/components/AdminFilterPanel';
 // @ts-ignore - no types
 import * as shpwrite from '@mapbox/shp-write';
 import { useAuth } from '@/hooks/useAuth';
@@ -94,6 +95,11 @@ export default function SecureAdminDashboard() {
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<DbSubmissionStatus | 'all'>('all');
+  const [dashboardFilters, setDashboardFilters] = useState<{
+    parkingConditions: DbParkingCondition[];
+    pointsOfInterest: DbPointOfInterest[];
+  }>({ parkingConditions: [], pointsOfInterest: [] });
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [editingResponseId, setEditingResponseId] = useState<string | null>(null);
   const [editingResponseText, setEditingResponseText] = useState('');
   const [responsePhotoFile, setResponsePhotoFile] = useState<File | null>(null);
@@ -107,15 +113,32 @@ export default function SecureAdminDashboard() {
   const responsePhotoInputRef = useRef<HTMLInputElement>(null);
 
   const filteredSubmissions = submissions.filter((s) => {
-    const matchesSearch = 
+    const matchesSearch =
       s.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.comments?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
+
+    const matchesParkingCondition =
+      dashboardFilters.parkingConditions.length === 0 ||
+      dashboardFilters.parkingConditions.includes(s.parkingCondition);
+
+    const matchesPoi =
+      dashboardFilters.pointsOfInterest.length === 0 ||
+      s.pointsOfInterest.some((poi) => dashboardFilters.pointsOfInterest.includes(poi));
+
+    return matchesSearch && matchesStatus && matchesParkingCondition && matchesPoi;
   });
+
+  const handleAdvancedFilterChange = (partial: Partial<typeof dashboardFilters>) =>
+    setDashboardFilters((prev) => ({ ...prev, ...partial }));
+
+  const handleClearAdvancedFilters = () =>
+    setDashboardFilters({ parkingConditions: [], pointsOfInterest: [] });
+
+  const hasActiveAdvancedFilters =
+    dashboardFilters.parkingConditions.length > 0 || dashboardFilters.pointsOfInterest.length > 0;
 
   const exportToCSV = () => {
     const headers = ['מזהה','כתובת','שם מדווח','אימייל','טלפון','קו רוחב','קו אורך','מצב חניה','עמדות קיימות','נקודות עניין','הערות','סטטוס','תאריך יצירה'];
@@ -543,7 +566,26 @@ ${placemarks}
               {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
             </SelectContent>
           </Select>
+          <Button
+            variant={hasActiveAdvancedFilters ? 'default' : 'outline'}
+            onClick={() => setFilterPanelOpen((open) => !open)}
+          >
+            <Filter className="h-4 w-4 ml-2" />
+            סינון מתקדם
+            {hasActiveAdvancedFilters && (
+              <span className="mr-2 bg-primary-foreground/20 px-2 py-0.5 rounded-full text-xs">
+                {dashboardFilters.parkingConditions.length + dashboardFilters.pointsOfInterest.length}
+              </span>
+            )}
+          </Button>
         </div>
+        {filterPanelOpen && (
+          <AdminFilterPanel
+            filters={dashboardFilters}
+            onFilterChange={handleAdvancedFilterChange}
+            onClearFilters={handleClearAdvancedFilters}
+          />
+        )}
         <div className="bg-card rounded-lg border border-border overflow-hidden">
           {viewMode === 'table' ? (
           <div className="overflow-x-auto">
