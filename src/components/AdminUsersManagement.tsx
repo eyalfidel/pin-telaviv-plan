@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { UserPlus, Trash2, Shield } from 'lucide-react';
+import { UserPlus, Trash2, Shield, Check, X, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,23 +31,35 @@ interface AdminRow {
 export default function AdminUsersManagement() {
   const { user } = useAuth();
   const [admins, setAdmins] = useState<AdminRow[]>([]);
+  const [pendingUsers, setPendingUsers] = useState<AdminRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newEmail, setNewEmail] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
-  const loadAdmins = async () => {
+  const loadAll = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase.rpc('list_admins');
-    if (error) {
-      toast.error('שגיאה בטעינת רשימת האדמינים: ' + error.message);
+    const [adminsResult, pendingResult] = await Promise.all([
+      supabase.rpc('list_admins'),
+      supabase.rpc('list_pending_users'),
+    ]);
+
+    if (adminsResult.error) {
+      toast.error('שגיאה בטעינת רשימת האדמינים: ' + adminsResult.error.message);
     } else {
-      setAdmins(data ?? []);
+      setAdmins(adminsResult.data ?? []);
     }
+
+    if (pendingResult.error) {
+      toast.error('שגיאה בטעינת רשימת הממתינים: ' + pendingResult.error.message);
+    } else {
+      setPendingUsers(pendingResult.data ?? []);
+    }
+
     setIsLoading(false);
   };
 
   useEffect(() => {
-    loadAdmins();
+    loadAll();
   }, []);
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -63,7 +75,7 @@ export default function AdminUsersManagement() {
     } else {
       toast.success('האדמין נוסף בהצלחה');
       setNewEmail('');
-      loadAdmins();
+      loadAll();
     }
   };
 
@@ -73,7 +85,27 @@ export default function AdminUsersManagement() {
       toast.error(error.message);
     } else {
       toast.success('הוסרו הרשאות הניהול');
-      loadAdmins();
+      loadAll();
+    }
+  };
+
+  const handleApprove = async (userId: string) => {
+    const { error } = await supabase.rpc('approve_pending_user', { target_user_id: userId });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('המשתמש אושר כאדמין');
+      loadAll();
+    }
+  };
+
+  const handleReject = async (userId: string) => {
+    const { error } = await supabase.rpc('reject_pending_user', { target_user_id: userId });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('הבקשה נדחתה');
+      loadAll();
     }
   };
 
@@ -110,6 +142,59 @@ export default function AdminUsersManagement() {
           </Button>
         </form>
       </div>
+
+      {!isLoading && pendingUsers.length > 0 && (
+        <div className="bg-card rounded-lg border border-warning/40 overflow-hidden mb-6">
+          <div className="px-4 py-3 border-b border-border bg-warning/10 flex items-center gap-2">
+            <Clock className="h-4 w-4 text-warning" />
+            <h2 className="text-sm font-semibold text-foreground">ממתינים לאישור ({pendingUsers.length})</h2>
+          </div>
+          <ul className="divide-y divide-border">
+            {pendingUsers.map((pending) => (
+              <li key={pending.user_id} className="flex items-center justify-between px-4 py-3 gap-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground" dir="ltr">{pending.email}</p>
+                  <p className="text-xs text-muted-foreground">
+                    נרשם בתאריך {new Date(pending.created_at).toLocaleDateString('he-IL')}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleApprove(pending.user_id)}
+                    title="אשר כאדמין"
+                    className="text-success hover:text-success hover:bg-success/10"
+                  >
+                    <Check className="h-4 w-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" title="דחה בקשה" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>דחיית בקשת הרשמה</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          האם אתה בטוח שברצונך לדחות את הבקשה של {pending.email}? הוא לא יקבל הרשאת ניהול.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter className="flex-row-reverse gap-2">
+                        <AlertDialogCancel>ביטול</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleReject(pending.user_id)} className="bg-destructive text-destructive-foreground">
+                          דחה
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="bg-card rounded-lg border border-border overflow-hidden">
         <div className="px-4 py-3 border-b border-border">
