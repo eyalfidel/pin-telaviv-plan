@@ -212,6 +212,15 @@ export type Database = {
           user_id: string
         }[]
       }
+      list_all_registrations: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          role: string
+          user_id: string
+        }[]
+      }
       list_pending_users: {
         Args: never
         Returns: {

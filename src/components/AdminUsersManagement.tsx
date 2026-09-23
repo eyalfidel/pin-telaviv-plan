@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { UserPlus, Trash2, Shield, Check, X, Clock } from 'lucide-react';
+import { UserPlus, Trash2, Shield, Check, X, Clock, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +24,18 @@ interface AdminRow {
   created_at: string;
 }
 
+interface RegistrationRow {
+  user_id: string;
+  email: string;
+  created_at: string;
+  role: string | null;
+}
+
+const REGISTRATION_STATUS_LABEL: Record<string, string> = {
+  admin: 'מנהל',
+  user: 'נדחה',
+};
+
 // Lets an existing admin add or remove other admins, via the
 // list_admins/add_admin_by_email/remove_admin Postgres functions (each of
 // which independently checks the caller is an admin - this screen is a
@@ -32,15 +44,17 @@ export default function AdminUsersManagement() {
   const { user } = useAuth();
   const [admins, setAdmins] = useState<AdminRow[]>([]);
   const [pendingUsers, setPendingUsers] = useState<AdminRow[]>([]);
+  const [registrations, setRegistrations] = useState<RegistrationRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newEmail, setNewEmail] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
   const loadAll = async () => {
     setIsLoading(true);
-    const [adminsResult, pendingResult] = await Promise.all([
+    const [adminsResult, pendingResult, registrationsResult] = await Promise.all([
       supabase.rpc('list_admins'),
       supabase.rpc('list_pending_users'),
+      supabase.rpc('list_all_registrations'),
     ]);
 
     if (adminsResult.error) {
@@ -53,6 +67,12 @@ export default function AdminUsersManagement() {
       toast.error('שגיאה בטעינת רשימת הממתינים: ' + pendingResult.error.message);
     } else {
       setPendingUsers(pendingResult.data ?? []);
+    }
+
+    if (registrationsResult.error) {
+      toast.error('שגיאה בטעינת יומן ההרשמות: ' + registrationsResult.error.message);
+    } else {
+      setRegistrations(registrationsResult.data ?? []);
     }
 
     setIsLoading(false);
@@ -243,6 +263,37 @@ export default function AdminUsersManagement() {
                 </li>
               );
             })}
+          </ul>
+        )}
+      </div>
+
+      <div className="bg-card rounded-lg border border-border overflow-hidden mt-6">
+        <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+          <History className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-semibold text-foreground">יומן הרשמות ({registrations.length})</h2>
+        </div>
+        <p className="px-4 pt-3 text-xs text-muted-foreground">
+          רשומה קבועה של כל מי שנרשם אי פעם, כולל שעת ההרשמה המדויקת והסטטוס הנוכחי שלו - גם לאחר שהוא כבר לא מופיע ב"ממתינים לאישור".
+        </p>
+        {isLoading ? (
+          <div className="p-6 text-center text-muted-foreground text-sm">טוען...</div>
+        ) : registrations.length === 0 ? (
+          <div className="p-6 text-center text-muted-foreground text-sm">אין עדיין הרשמות</div>
+        ) : (
+          <ul className="divide-y divide-border max-h-96 overflow-y-auto mt-2">
+            {registrations.map((reg) => (
+              <li key={reg.user_id} className="flex items-center justify-between px-4 py-2.5 gap-3">
+                <div>
+                  <p className="text-sm text-foreground" dir="ltr">{reg.email}</p>
+                  <p className="text-xs text-muted-foreground">
+                    נרשם ב-{new Date(reg.created_at).toLocaleString('he-IL')}
+                  </p>
+                </div>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded shrink-0">
+                  {reg.role ? REGISTRATION_STATUS_LABEL[reg.role] ?? reg.role : 'ממתין'}
+                </span>
+              </li>
+            ))}
           </ul>
         )}
       </div>
