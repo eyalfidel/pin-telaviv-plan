@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Download,
@@ -15,7 +15,9 @@ import {
   Loader2,
   Lock,
   Unlock,
-  Users
+  Users,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -111,6 +113,10 @@ export default function SecureAdminDashboard() {
   const [statusHistory, setStatusHistory] = useState<
     { old_status: DbSubmissionStatus | null; new_status: DbSubmissionStatus; changed_at: string }[]
   >([]);
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+  const [rowHistories, setRowHistories] = useState<
+    Record<string, { old_status: DbSubmissionStatus | null; new_status: DbSubmissionStatus; changed_at: string }[]>
+  >({});
   const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
   const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -395,15 +401,61 @@ ${placemarks}
     setEditPhotoFile(null);
     setEditPhotoPreview(null);
     setStatusHistory([]);
-    supabase
+    fetchStatusHistory(submission.id).then(setStatusHistory);
+  };
+
+  const fetchStatusHistory = async (submissionId: string) => {
+    const { data, error } = await supabase
       .from('submission_status_history')
       .select('old_status,new_status,changed_at')
-      .eq('submission_id', submission.id)
-      .order('changed_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (!error) setStatusHistory(data || []);
-      });
+      .eq('submission_id', submissionId)
+      .order('changed_at', { ascending: false });
+    return error ? [] : data || [];
   };
+
+  const toggleRowExpand = async (id: string) => {
+    if (expandedRowId === id) {
+      setExpandedRowId(null);
+      return;
+    }
+    setExpandedRowId(id);
+    if (!rowHistories[id]) {
+      const history = await fetchStatusHistory(id);
+      setRowHistories((prev) => ({ ...prev, [id]: history }));
+    }
+  };
+
+  const renderStatusHistoryBlock = (
+    createdAt: Date,
+    history: { old_status: DbSubmissionStatus | null; new_status: DbSubmissionStatus; changed_at: string }[]
+  ) => (
+    <div className="text-sm space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-muted-foreground">התקבלה בתאריך</span>
+        <span className="font-medium" dir="ltr">{createdAt.toLocaleString('he-IL')}</span>
+      </div>
+      {history.length > 0 && (
+        <div className="space-y-1 pt-2 border-t border-border">
+          <p className="text-xs font-medium text-muted-foreground">היסטוריית סטטוסים</p>
+          <ul className="space-y-1">
+            {history.map((h, i) => (
+              <li key={i} className="text-xs flex items-center justify-between gap-2">
+                <span>
+                  {STATUS_LABELS[h.new_status]}
+                  {h.old_status && (
+                    <span className="text-muted-foreground"> (לפני כן: {STATUS_LABELS[h.old_status]})</span>
+                  )}
+                </span>
+                <span className="text-muted-foreground shrink-0" dir="ltr">
+                  {new Date(h.changed_at).toLocaleString('he-IL')}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 
   const handleSaveEdit = async () => {
     if (!editingSubmission) return;
@@ -610,12 +662,18 @@ ${placemarks}
           {viewMode === 'table' ? (
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader><TableRow><TableHead>כתובת</TableHead><TableHead>תמונה</TableHead><TableHead>שם מדווח</TableHead><TableHead>פרטי קשר</TableHead><TableHead>מצב חניה</TableHead><TableHead>עמדות קיימות</TableHead><TableHead>סטטוס</TableHead><TableHead>תגובה</TableHead><TableHead>תאריך</TableHead><TableHead className="text-left">פעולות</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead className="w-10"></TableHead><TableHead>כתובת</TableHead><TableHead>תמונה</TableHead><TableHead>שם מדווח</TableHead><TableHead>פרטי קשר</TableHead><TableHead>מצב חניה</TableHead><TableHead>עמדות קיימות</TableHead><TableHead>סטטוס</TableHead><TableHead>תגובה</TableHead><TableHead>תאריך</TableHead><TableHead className="text-left">פעולות</TableHead></TableRow></TableHeader>
               <TableBody>
                 {filteredSubmissions.length === 0 ? (
-                  <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">לא נמצאו הגשות</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">לא נמצאו הגשות</TableCell></TableRow>
                 ) : filteredSubmissions.map((s) => (
-                  <TableRow key={s.id}>
+                  <Fragment key={s.id}>
+                  <TableRow>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleRowExpand(s.id)} title="פרטים נוספים">
+                        {expandedRowId === s.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </Button>
+                    </TableCell>
                     <TableCell className="max-w-[200px]"><p className="font-medium truncate">{s.address}</p>{s.comments && <p className="text-xs text-muted-foreground truncate">{s.comments}</p>}</TableCell>
                     <TableCell>
                       {s.photoUrl ? (
@@ -674,6 +732,14 @@ ${placemarks}
                       </div>
                     </TableCell>
                   </TableRow>
+                  {expandedRowId === s.id && (
+                    <TableRow>
+                      <TableCell colSpan={11} className="bg-muted/30">
+                        {renderStatusHistoryBlock(s.createdAt, rowHistories[s.id] || [])}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  </Fragment>
                 ))}
               </TableBody>
             </Table>
@@ -744,31 +810,8 @@ ${placemarks}
               <DialogTitle>עריכת דיווח</DialogTitle>
             </DialogHeader>
             {editingSubmission && (
-              <div className="bg-muted/30 rounded-lg border border-border p-3 text-sm space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">התקבלה בתאריך</span>
-                  <span className="font-medium" dir="ltr">{editingSubmission.createdAt.toLocaleString('he-IL')}</span>
-                </div>
-                {statusHistory.length > 0 && (
-                  <div className="space-y-1 pt-2 border-t border-border">
-                    <p className="text-xs font-medium text-muted-foreground">היסטוריית סטטוסים</p>
-                    <ul className="space-y-1">
-                      {statusHistory.map((h, i) => (
-                        <li key={i} className="text-xs flex items-center justify-between gap-2">
-                          <span>
-                            {STATUS_LABELS[h.new_status]}
-                            {h.old_status && (
-                              <span className="text-muted-foreground"> (לפני כן: {STATUS_LABELS[h.old_status]})</span>
-                            )}
-                          </span>
-                          <span className="text-muted-foreground shrink-0" dir="ltr">
-                            {new Date(h.changed_at).toLocaleString('he-IL')}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+              <div className="bg-muted/30 rounded-lg border border-border p-3">
+                {renderStatusHistoryBlock(editingSubmission.createdAt, statusHistory)}
               </div>
             )}
             <ScrollArea className="max-h-[60vh] pr-4">
