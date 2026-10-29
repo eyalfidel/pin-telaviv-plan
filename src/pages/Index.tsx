@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 const STATUS_COLORS: Record<DbSubmissionStatus, string> = {
   pending: 'hsl(48, 96%, 53%)',
   in_review: 'hsl(207, 70%, 45%)',
+  transferred_to_shafa: 'hsl(271, 70%, 50%)',
   approved: 'hsl(142, 70%, 40%)',
   rejected: 'hsl(0, 70%, 50%)',
   hidden: 'hsl(0, 0%, 50%)',
@@ -24,6 +25,7 @@ const STATUS_COLORS: Record<DbSubmissionStatus, string> = {
 const STATUS_LABELS: Record<DbSubmissionStatus, string> = {
   pending: 'ממתין לאישור במערכת',
   in_review: 'הבקשה בבדיקה',
+  transferred_to_shafa: 'הועבר לשפ"ע',
   approved: 'הבקשה אושרה',
   rejected: 'הבקשה נדחתה',
   hidden: 'מוסתר',

@@ -108,6 +108,9 @@ export default function SecureAdminDashboard() {
   const [responsePhotoPreview, setResponsePhotoPreview] = useState<string | null>(null);
   const [editingSubmission, setEditingSubmission] = useState<AdminSubmission | null>(null);
   const [editFormData, setEditFormData] = useState<SubmissionUpdateData>({});
+  const [statusHistory, setStatusHistory] = useState<
+    { old_status: DbSubmissionStatus | null; new_status: DbSubmissionStatus; changed_at: string }[]
+  >([]);
   const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
   const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -391,6 +394,15 @@ ${placemarks}
     });
     setEditPhotoFile(null);
     setEditPhotoPreview(null);
+    setStatusHistory([]);
+    supabase
+      .from('submission_status_history')
+      .select('old_status,new_status,changed_at')
+      .eq('submission_id', submission.id)
+      .order('changed_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error) setStatusHistory(data || []);
+      });
   };
 
   const handleSaveEdit = async () => {
@@ -459,6 +471,7 @@ ${placemarks}
     const styles: Record<DbSubmissionStatus, string> = {
       pending: 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30',
       in_review: 'bg-blue-500/20 text-blue-700 border-blue-500/30',
+      transferred_to_shafa: 'bg-purple-500/20 text-purple-700 border-purple-500/30',
       approved: 'bg-green-500/20 text-green-700 border-green-500/30',
       rejected: 'bg-destructive/20 text-destructive border-destructive/30',
       hidden: 'bg-muted text-muted-foreground border-muted-foreground/30',
@@ -470,6 +483,7 @@ ${placemarks}
     total: submissions.length,
     pending: submissions.filter((s) => s.status === 'pending').length,
     in_review: submissions.filter((s) => s.status === 'in_review').length,
+    transferred_to_shafa: submissions.filter((s) => s.status === 'transferred_to_shafa').length,
     approved: submissions.filter((s) => s.status === 'approved').length,
     rejected: submissions.filter((s) => s.status === 'rejected').length,
     hidden: submissions.filter((s) => s.status === 'hidden').length,
@@ -548,10 +562,11 @@ ${placemarks}
               <Button variant="ghost" size="sm" onClick={signOut}><LogOut className="h-4 w-4 ml-1" />התנתק</Button>
             </div>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mt-4">
+          <div className="grid grid-cols-3 sm:grid-cols-7 gap-3 mt-4">
             <div className="bg-muted/50 rounded-lg p-3 text-center"><p className="text-2xl font-semibold">{stats.total}</p><p className="text-xs text-muted-foreground">סה״כ</p></div>
             <div className="bg-warning/10 rounded-lg p-3 text-center"><p className="text-2xl font-semibold text-warning">{stats.pending}</p><p className="text-xs text-muted-foreground">ממתינים</p></div>
             <div className="bg-blue-500/10 rounded-lg p-3 text-center"><p className="text-2xl font-semibold text-blue-600">{stats.in_review}</p><p className="text-xs text-muted-foreground">בבדיקה</p></div>
+            <div className="bg-purple-500/10 rounded-lg p-3 text-center"><p className="text-2xl font-semibold text-purple-600">{stats.transferred_to_shafa}</p><p className="text-xs text-muted-foreground">הועבר לשפ״ע</p></div>
             <div className="bg-success/10 rounded-lg p-3 text-center"><p className="text-2xl font-semibold text-success">{stats.approved}</p><p className="text-xs text-muted-foreground">מאושרים</p></div>
             <div className="bg-destructive/10 rounded-lg p-3 text-center"><p className="text-2xl font-semibold text-destructive">{stats.rejected}</p><p className="text-xs text-muted-foreground">נדחו</p></div>
             <div className="bg-muted rounded-lg p-3 text-center"><p className="text-2xl font-semibold text-muted-foreground">{stats.hidden}</p><p className="text-xs text-muted-foreground">מוסתרים</p></div>
@@ -728,6 +743,34 @@ ${placemarks}
             <DialogHeader>
               <DialogTitle>עריכת דיווח</DialogTitle>
             </DialogHeader>
+            {editingSubmission && (
+              <div className="bg-muted/30 rounded-lg border border-border p-3 text-sm space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">התקבלה בתאריך</span>
+                  <span className="font-medium" dir="ltr">{editingSubmission.createdAt.toLocaleString('he-IL')}</span>
+                </div>
+                {statusHistory.length > 0 && (
+                  <div className="space-y-1 pt-2 border-t border-border">
+                    <p className="text-xs font-medium text-muted-foreground">היסטוריית סטטוסים</p>
+                    <ul className="space-y-1">
+                      {statusHistory.map((h, i) => (
+                        <li key={i} className="text-xs flex items-center justify-between gap-2">
+                          <span>
+                            {STATUS_LABELS[h.new_status]}
+                            {h.old_status && (
+                              <span className="text-muted-foreground"> (לפני כן: {STATUS_LABELS[h.old_status]})</span>
+                            )}
+                          </span>
+                          <span className="text-muted-foreground shrink-0" dir="ltr">
+                            {new Date(h.changed_at).toLocaleString('he-IL')}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
             <ScrollArea className="max-h-[60vh] pr-4">
               <div className="space-y-6 py-4">
                 {/* Address */}

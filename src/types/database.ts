@@ -1,7 +1,7 @@
 // Types that match the database schema
 export type DbParkingCondition = 'existing_needs_more' | 'none' | 'nearby';
 export type DbPointOfInterest = 'cultural' | 'educational' | 'health' | 'commercial' | 'transport' | 'park' | 'residential' | 'other';
-export type DbSubmissionStatus = 'pending' | 'in_review' | 'approved' | 'rejected' | 'hidden';
+export type DbSubmissionStatus = 'pending' | 'in_review' | 'transferred_to_shafa' | 'approved' | 'rejected' | 'hidden';
 
 export interface DbBicycleSubmission {
   id: string;
@@ -77,6 +77,7 @@ export const POINTS_OF_INTEREST_LABELS: Record<DbPointOfInterest, string> = {
 export const STATUS_LABELS: Record<DbSubmissionStatus, string> = {
   pending: 'ממתין לאישור במערכת',
   in_review: 'הבקשה התקבלה לבדיקה',
+  transferred_to_shafa: 'הועבר לשפ"ע',
   approved: 'הבקשה אושרה',
   rejected: 'הבקשה נדחתה',
   hidden: 'מוסתר',

@@ -101,6 +101,48 @@ export type Database = {
         }
         Relationships: []
       }
+      submission_status_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_status: Database["public"]["Enums"]["submission_status"]
+          old_status: Database["public"]["Enums"]["submission_status"] | null
+          submission_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_status: Database["public"]["Enums"]["submission_status"]
+          old_status?: Database["public"]["Enums"]["submission_status"] | null
+          submission_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_status?: Database["public"]["Enums"]["submission_status"]
+          old_status?: Database["public"]["Enums"]["submission_status"] | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submission_status_history_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "bicycle_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submission_status_history_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "bicycle_submissions_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -250,6 +292,7 @@ export type Database = {
       submission_status:
         | "pending"
         | "in_review"
+        | "transferred_to_shafa"
         | "approved"
         | "rejected"
         | "hidden"
@@ -395,6 +438,7 @@ export const Constants = {
       submission_status: [
         "pending",
         "in_review",
+        "transferred_to_shafa",
         "approved",
         "rejected",
         "hidden",

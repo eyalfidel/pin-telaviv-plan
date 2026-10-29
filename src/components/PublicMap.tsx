@@ -15,17 +15,19 @@ L.Icon.Default.mergeOptions({
 // Exported so other map views (e.g. the admin dashboard's map legend) can
 // reuse the same colors instead of redefining them.
 export const STATUS_COLORS: Record<DbSubmissionStatus, string> = {
-  pending: 'hsl(48, 96%, 53%)',      // Yellow - pending
-  in_review: 'hsl(207, 70%, 45%)',   // Blue - in review
-  approved: 'hsl(142, 70%, 40%)',    // Green - approved
-  rejected: 'hsl(0, 70%, 50%)',      // Red - rejected
-  hidden: 'hsl(0, 0%, 50%)',         // Gray - hidden
+  pending: 'hsl(48, 96%, 53%)',             // Yellow - pending
+  in_review: 'hsl(207, 70%, 45%)',          // Blue - in review
+  transferred_to_shafa: 'hsl(271, 70%, 50%)', // Purple - transferred to Shafa
+  approved: 'hsl(142, 70%, 40%)',           // Green - approved
+  rejected: 'hsl(0, 70%, 50%)',             // Red - rejected
+  hidden: 'hsl(0, 0%, 50%)',                // Gray - hidden
 };
 
 // Status labels in Hebrew
 const STATUS_LABELS: Record<DbSubmissionStatus, string> = {
   pending: 'ממתין לאישור במערכת',
   in_review: 'הבקשה בבדיקה',
+  transferred_to_shafa: 'הועבר לשפ"ע',
   approved: 'הבקשה אושרה',
   rejected: 'הבקשה נדחתה',
   hidden: 'מוסתר',
