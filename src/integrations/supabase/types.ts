@@ -24,6 +24,7 @@ export type Database = {
           email: string | null
           existing_spaces_count: number | null
           id: string
+          internal_note: string | null
           latitude: number
           longitude: number
           other_poi_text: string | null
@@ -46,6 +47,7 @@ export type Database = {
           email?: string | null
           existing_spaces_count?: number | null
           id?: string
+          internal_note?: string | null
           latitude: number
           longitude: number
           other_poi_text?: string | null
@@ -68,6 +70,7 @@ export type Database = {
           email?: string | null
           existing_spaces_count?: number | null
           id?: string
+          internal_note?: string | null
           latitude?: number
           longitude?: number
           other_poi_text?: string | null

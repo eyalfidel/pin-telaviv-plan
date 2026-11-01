@@ -9,6 +9,7 @@ import {
   Filter,
   Search,
   MessageSquare,
+  StickyNote,
   Image as ImageIcon,
   Pencil,
   Upload,
@@ -93,7 +94,7 @@ type ViewMode = 'table' | 'map';
 
 export default function SecureAdminDashboard() {
   const { signOut } = useAuth();
-  const { submissions, isLoading, updateStatus, updateAdminResponse, updateSubmission, deleteSubmission, refetch } = useAdminSubmissions();
+  const { submissions, isLoading, updateStatus, updateAdminResponse, updateInternalNote, updateSubmission, deleteSubmission, refetch } = useAdminSubmissions();
   const { submissionsOpen, isLoading: isSettingsLoading, setSubmissionsOpen } = useSiteSettings();
   const [isTogglingSubmissions, setIsTogglingSubmissions] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
@@ -108,6 +109,9 @@ export default function SecureAdminDashboard() {
   const [editingResponseText, setEditingResponseText] = useState('');
   const [responsePhotoFile, setResponsePhotoFile] = useState<File | null>(null);
   const [responsePhotoPreview, setResponsePhotoPreview] = useState<string | null>(null);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingNoteText, setEditingNoteText] = useState('');
+  const [isSavingNote, setIsSavingNote] = useState(false);
   const [editingSubmission, setEditingSubmission] = useState<AdminSubmission | null>(null);
   const [editFormData, setEditFormData] = useState<SubmissionUpdateData>({});
   const [statusHistory, setStatusHistory] = useState<
@@ -385,6 +389,25 @@ ${placemarks}
     }
   };
 
+  const handleOpenNoteEdit = (id: string, currentNote?: string) => {
+    setEditingNoteId(id);
+    setEditingNoteText(currentNote || '');
+  };
+
+  const handleSaveNote = async () => {
+    if (!editingNoteId) return;
+    setIsSavingNote(true);
+    const success = await updateInternalNote(editingNoteId, editingNoteText);
+    setIsSavingNote(false);
+    if (success) {
+      toast.success('ההערה הפנימית נשמרה');
+      setEditingNoteId(null);
+      setEditingNoteText('');
+    } else {
+      toast.error('שגיאה בשמירת ההערה');
+    }
+  };
+
   const handleOpenEdit = (submission: AdminSubmission) => {
     setEditingSubmission(submission);
     setEditFormData({
@@ -548,7 +571,7 @@ ${placemarks}
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-background">
       <div className="bg-card border-b border-border sticky top-16 z-[999]">
-        <div className="container mx-auto px-4 py-4">
+        <div className="w-full px-4 md:px-6 py-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
               <h1 className="text-xl font-display font-semibold text-foreground">לוח בקרה - מנהל</h1>
@@ -625,7 +648,7 @@ ${placemarks}
           </div>
         </div>
       </div>
-      <div className="container mx-auto px-4 py-6">
+      <div className="w-full px-4 md:px-6 py-6">
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -662,10 +685,10 @@ ${placemarks}
           {viewMode === 'table' ? (
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader><TableRow><TableHead className="w-10"></TableHead><TableHead>כתובת</TableHead><TableHead>תמונה</TableHead><TableHead>שם מדווח</TableHead><TableHead>פרטי קשר</TableHead><TableHead>מצב חניה</TableHead><TableHead>עמדות קיימות</TableHead><TableHead>סטטוס</TableHead><TableHead>תגובה</TableHead><TableHead>תאריך</TableHead><TableHead className="text-left">פעולות</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead className="w-10"></TableHead><TableHead>כתובת</TableHead><TableHead>תמונה</TableHead><TableHead>שם מדווח</TableHead><TableHead>פרטי קשר</TableHead><TableHead>מצב חניה</TableHead><TableHead>עמדות קיימות</TableHead><TableHead>סטטוס</TableHead><TableHead>תגובה</TableHead><TableHead>הערה פנימית</TableHead><TableHead>תאריך</TableHead><TableHead className="text-left">פעולות</TableHead></TableRow></TableHeader>
               <TableBody>
                 {filteredSubmissions.length === 0 ? (
-                  <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">לא נמצאו הגשות</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={12} className="text-center py-8 text-muted-foreground">לא נמצאו הגשות</TableCell></TableRow>
                 ) : filteredSubmissions.map((s) => (
                   <Fragment key={s.id}>
                   <TableRow>
@@ -712,6 +735,24 @@ ${placemarks}
                         </Button>
                       </div>
                     </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {s.internalNote ? (
+                          <span className="text-xs text-muted-foreground truncate max-w-[100px]" title={s.internalNote}>{s.internalNote}</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => handleOpenNoteEdit(s.id, s.internalNote)}
+                          title="הערה פנימית (לצוות בלבד)"
+                        >
+                          <StickyNote className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{s.createdAt.toLocaleDateString('he-IL')}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-end gap-1">
@@ -734,7 +775,7 @@ ${placemarks}
                   </TableRow>
                   {expandedRowId === s.id && (
                     <TableRow>
-                      <TableCell colSpan={11} className="bg-muted/30">
+                      <TableCell colSpan={12} className="bg-muted/30">
                         {renderStatusHistoryBlock(s.createdAt, rowHistories[s.id] || [])}
                       </TableCell>
                     </TableRow>
@@ -798,6 +839,31 @@ ${placemarks}
               <Button onClick={handleSaveResponse} disabled={isUploading}>
                 {isUploading && <Loader2 className="h-4 w-4 ml-2 animate-spin" />}
                 שמור תגובה
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Internal Note Edit Dialog */}
+        <Dialog open={!!editingNoteId} onOpenChange={(open) => !open && setEditingNoteId(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>הערה פנימית</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2 py-4">
+              <p className="text-xs text-muted-foreground">ההערה נראית רק לצוות הניהול, ולעולם לא מוצגת לציבור.</p>
+              <Textarea
+                value={editingNoteText}
+                onChange={(e) => setEditingNoteText(e.target.value)}
+                placeholder="הערה פנימית לצוות..."
+                className="min-h-[120px]"
+              />
+            </div>
+            <DialogFooter className="flex-row-reverse gap-2">
+              <Button variant="outline" onClick={() => setEditingNoteId(null)}>ביטול</Button>
+              <Button onClick={handleSaveNote} disabled={isSavingNote}>
+                {isSavingNote && <Loader2 className="h-4 w-4 ml-2 animate-spin" />}
+                שמור הערה
               </Button>
             </DialogFooter>
           </DialogContent>

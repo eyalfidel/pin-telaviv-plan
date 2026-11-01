@@ -29,6 +29,7 @@ interface UseAdminSubmissionsReturn {
   refetch: () => void;
   updateStatus: (id: string, status: DbSubmissionStatus) => Promise<boolean>;
   updateAdminResponse: (id: string, response: string, adminPhotoUrl?: string) => Promise<boolean>;
+  updateInternalNote: (id: string, note: string) => Promise<boolean>;
   updateSubmission: (id: string, data: SubmissionUpdateData) => Promise<boolean>;
   deleteSubmission: (id: string) => Promise<boolean>;
 }
@@ -123,6 +124,27 @@ export function useAdminSubmissions(): UseAdminSubmissionsReturn {
     }
   };
 
+  const updateInternalNote = async (id: string, note: string): Promise<boolean> => {
+    try {
+      const { error: updateError } = await supabase
+        .from('bicycle_submissions')
+        .update({ internal_note: note || null })
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setSubmissions((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, internalNote: note || undefined } : s))
+      );
+
+      return true;
+    } catch (err) {
+      console.error('Error updating internal note:', err);
+      return false;
+    }
+  };
+
   const updateSubmission = async (id: string, data: SubmissionUpdateData): Promise<boolean> => {
     try {
       const updateData: Record<string, any> = {};
@@ -186,6 +208,7 @@ export function useAdminSubmissions(): UseAdminSubmissionsReturn {
     refetch: fetchSubmissions,
     updateStatus,
     updateAdminResponse,
+    updateInternalNote,
     updateSubmission,
     deleteSubmission,
   };

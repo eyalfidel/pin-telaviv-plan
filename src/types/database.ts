@@ -18,6 +18,7 @@ export interface DbBicycleSubmission {
   reporter_name?: string | null;
   existing_spaces_count?: number | null;
   status: DbSubmissionStatus;
+  internal_note?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -46,6 +47,7 @@ export interface AdminSubmission extends PublicSubmission {
   phone?: string;
   reporterName?: string;
   existingSpacesCount?: number;
+  internalNote?: string;
   updatedAt: Date;
 }
 
@@ -111,6 +113,7 @@ export function toAdminSubmission(row: DbBicycleSubmission): AdminSubmission {
     phone: row.phone || undefined,
     reporterName: row.reporter_name || undefined,
     existingSpacesCount: row.existing_spaces_count ?? undefined,
+    internalNote: row.internal_note || undefined,
     status: row.status,
     updatedAt: new Date(row.updated_at),
   };
