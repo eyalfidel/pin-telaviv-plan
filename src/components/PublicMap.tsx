@@ -114,9 +114,14 @@ interface PublicMapProps {
   // unchanged; the admin map view opts in, since an empty admin map
   // always means "the current filters matched nothing."
   emptyMessage?: string;
+  // Optional: fires once with the underlying Leaflet map instance after
+  // init, so a wrapper (e.g. the admin map view) can add its own extra
+  // layers without this component needing to know about them. Left
+  // undefined by the public page.
+  onMapReady?: (map: L.Map) => void;
 }
 
-export default function PublicMap({ submissions, pendingLocation, onMapClick, onMarkerClick, emptyMessage }: PublicMapProps) {
+export default function PublicMap({ submissions, pendingLocation, onMapClick, onMarkerClick, emptyMessage, onMapReady }: PublicMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
@@ -153,13 +158,15 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick, on
       onMapClick?.(e.latlng.lat, e.latlng.lng);
     });
 
+    onMapReady?.(mapRef.current);
+
     return () => {
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
     };
-  }, [onMapClick]);
+  }, [onMapClick, onMapReady]);
 
   // Update markers when submissions change
   useEffect(() => {

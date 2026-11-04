@@ -32,6 +32,30 @@ export type Database = {
         }
         Relationships: []
       }
+      bicycle_docking_private_yards: {
+        Row: {
+          address: string
+          id: number
+          latitude: number
+          longitude: number
+          spaces: number | null
+        }
+        Insert: {
+          address: string
+          id: number
+          latitude: number
+          longitude: number
+          spaces?: number | null
+        }
+        Update: {
+          address?: string
+          id?: number
+          latitude?: number
+          longitude?: number
+          spaces?: number | null
+        }
+        Relationships: []
+      }
       bicycle_submissions: {
         Row: {
           address: string
