@@ -126,6 +126,7 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick, on
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
   const pendingMarkerRef = useRef<L.Marker | null>(null);
+  const selectedMarkerElRef = useRef<HTMLElement | null>(null);
 
   // Initialize map
   useEffect(() => {
@@ -174,6 +175,27 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick, on
 
     // Clear existing markers
     markersRef.current.clearLayers();
+
+    // Bigger popups with larger text are more readable on desktop; on
+    // mobile the narrower default keeps the popup from overflowing the
+    // screen.
+    const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+
+    // Scale up and outline the shape of the marker whose popup is open, so
+    // it's clear which point on the map the open popup refers to.
+    const setMarkerSelected = (el: HTMLElement | null | undefined, selected: boolean) => {
+      const shape = el?.querySelector<HTMLElement>('.relative > div');
+      if (!shape) return;
+      if (selected) {
+        shape.style.transform = 'rotate(-45deg) scale(1.35)';
+        shape.style.boxShadow = '0 0 0 3px white, 0 0 0 6px hsl(207, 90%, 55%), 0 2px 10px rgba(0,0,0,0.45)';
+        shape.style.zIndex = '1000';
+      } else {
+        shape.style.transform = 'rotate(-45deg)';
+        shape.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+        shape.style.zIndex = '';
+      }
+    };
 
     // Add markers for each submission
     submissions.forEach((submission) => {
@@ -239,17 +261,33 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick, on
         </p>
       ` : '';
 
+      const contentWidth = isDesktop ? 300 : 220;
+      const titleSize = isDesktop ? 16 : 14;
+      const bodySize = isDesktop ? 13 : 12;
+      const photoMaxHeight = isDesktop ? 160 : 120;
+
       marker.bindPopup(`
-        <div style="min-width: 220px; max-width: 280px;">
-          <strong style="font-size: 14px;">${submission.address}</strong>
+        <div style="direction: rtl; text-align: right; min-width: ${contentWidth}px; max-width: ${contentWidth + 60}px;">
+          <div class="popup-drag-handle" style="
+            cursor: move;
+            margin: -4px -4px 6px;
+            padding: 3px;
+            border-radius: 6px 6px 0 0;
+            background: #f3f4f6;
+            font-size: 10px;
+            color: #9ca3af;
+            text-align: center;
+            user-select: none;
+          ">⠿ גרור להזזה</div>
+          <strong style="font-size: ${titleSize}px;">${submission.address}</strong>
           ${reporterHtml}
-          <p style="margin: 8px 0; font-size: 12px; color: #666;">
+          <p style="margin: 8px 0; font-size: ${bodySize}px; color: #666;">
             ${submission.comments || 'אין הערות נוספות'}
           </p>
-          <p style="margin: 4px 0; font-size: 11px; color: #888;">
+          <p style="margin: 4px 0; font-size: ${bodySize - 1}px; color: #888;">
             ${PARKING_CONDITIONS_LABELS[submission.parkingCondition]}
           </p>
-          ${photoHtml}
+          ${photoHtml.replace('max-height: 120px', `max-height: ${photoMaxHeight}px`)}
           <span style="
             display: inline-block;
             padding: 2px 8px;
@@ -267,7 +305,48 @@ export default function PublicMap({ submissions, pendingLocation, onMapClick, on
             ${submission.createdAt.toLocaleDateString('he-IL')}
           </p>
         </div>
-      `);
+      `, { minWidth: contentWidth, maxWidth: contentWidth + 60 });
+
+      // Highlight the marker whose popup is open (bigger + outlined), and
+      // let the popup be dragged aside via its handle, so it's clear which
+      // point on the map an open popup refers to.
+      marker.on('popupopen', (e) => {
+        const markerEl = marker.getElement();
+        if (selectedMarkerElRef.current && selectedMarkerElRef.current !== markerEl) {
+          setMarkerSelected(selectedMarkerElRef.current, false);
+        }
+        setMarkerSelected(markerEl, true);
+        selectedMarkerElRef.current = markerEl;
+
+        const popupEl = e.popup.getElement();
+        const handle = popupEl?.querySelector<HTMLElement>('.popup-drag-handle');
+        if (!handle || !popupEl) return;
+        handle.onpointerdown = (ev: PointerEvent) => {
+          ev.preventDefault();
+          const startPos = L.DomUtil.getPosition(popupEl);
+          const startX = ev.clientX;
+          const startY = ev.clientY;
+          const onMove = (moveEv: PointerEvent) => {
+            L.DomUtil.setPosition(popupEl, L.point(
+              startPos.x + (moveEv.clientX - startX),
+              startPos.y + (moveEv.clientY - startY),
+            ));
+          };
+          const onUp = () => {
+            document.removeEventListener('pointermove', onMove);
+            document.removeEventListener('pointerup', onUp);
+          };
+          document.addEventListener('pointermove', onMove);
+          document.addEventListener('pointerup', onUp);
+        };
+      });
+      marker.on('popupclose', () => {
+        const markerEl = marker.getElement();
+        setMarkerSelected(markerEl, false);
+        if (selectedMarkerElRef.current === markerEl) {
+          selectedMarkerElRef.current = null;
+        }
+      });
 
       // Admin map view: also open the edit dialog for this submission on
       // click, alongside the normal popup.

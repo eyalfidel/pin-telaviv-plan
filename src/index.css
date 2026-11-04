@@ -14,6 +14,16 @@ html[dir="rtl"] .leaflet-control-zoom {
   right: 10px;
 }
 
+/* Leaflet hardcodes text-align: left on its popup wrapper regardless of
+   page direction - override it so popup content follows this app's RTL. */
+html[dir="rtl"] .leaflet-popup-content-wrapper {
+  text-align: right;
+}
+
+html[dir="rtl"] .leaflet-popup-content {
+  direction: rtl;
+}
+
 /* Tel Aviv Municipal Civic Design System */
 
 @layer base {
