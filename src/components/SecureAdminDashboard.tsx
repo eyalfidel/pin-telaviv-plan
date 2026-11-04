@@ -92,6 +92,13 @@ import { toast } from 'sonner';
 
 type ViewMode = 'table' | 'map';
 
+type StatusHistoryEntry = {
+  old_status: DbSubmissionStatus | null;
+  new_status: DbSubmissionStatus;
+  changed_at: string;
+  changed_by_label: string | null;
+};
+
 export default function SecureAdminDashboard() {
   const { signOut } = useAuth();
   const { submissions, isLoading, updateStatus, updateAdminResponse, updateInternalNote, updateSubmission, deleteSubmission, refetch } = useAdminSubmissions();
@@ -114,13 +121,9 @@ export default function SecureAdminDashboard() {
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [editingSubmission, setEditingSubmission] = useState<AdminSubmission | null>(null);
   const [editFormData, setEditFormData] = useState<SubmissionUpdateData>({});
-  const [statusHistory, setStatusHistory] = useState<
-    { old_status: DbSubmissionStatus | null; new_status: DbSubmissionStatus; changed_at: string }[]
-  >([]);
+  const [statusHistory, setStatusHistory] = useState<StatusHistoryEntry[]>([]);
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
-  const [rowHistories, setRowHistories] = useState<
-    Record<string, { old_status: DbSubmissionStatus | null; new_status: DbSubmissionStatus; changed_at: string }[]>
-  >({});
+  const [rowHistories, setRowHistories] = useState<Record<string, StatusHistoryEntry[]>>({});
   const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
   const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -427,13 +430,26 @@ ${placemarks}
     fetchStatusHistory(submission.id).then(setStatusHistory);
   };
 
-  const fetchStatusHistory = async (submissionId: string) => {
-    const { data, error } = await supabase
-      .from('submission_status_history')
-      .select('old_status,new_status,changed_at')
-      .eq('submission_id', submissionId)
-      .order('changed_at', { ascending: false });
+  const fetchStatusHistory = async (submissionId: string): Promise<StatusHistoryEntry[]> => {
+    const { data, error } = await supabase.rpc('list_submission_status_history', {
+      p_submission_id: submissionId,
+    });
     return error ? [] : data || [];
+  };
+
+  const handleDialogStatusChange = async (newStatus: DbSubmissionStatus) => {
+    if (!editingSubmission) return;
+    const id = editingSubmission.id;
+    const success = await updateStatus(id, newStatus);
+    if (success) {
+      toast.success('הסטטוס עודכן');
+      setEditingSubmission((prev) => (prev ? { ...prev, status: newStatus } : prev));
+      const history = await fetchStatusHistory(id);
+      setStatusHistory(history);
+      setRowHistories((prev) => ({ ...prev, [id]: history }));
+    } else {
+      toast.error('שגיאה בעדכון הסטטוס');
+    }
   };
 
   const toggleRowExpand = async (id: string) => {
@@ -448,10 +464,7 @@ ${placemarks}
     }
   };
 
-  const renderStatusHistoryBlock = (
-    createdAt: Date,
-    history: { old_status: DbSubmissionStatus | null; new_status: DbSubmissionStatus; changed_at: string }[]
-  ) => (
+  const renderStatusHistoryBlock = (createdAt: Date, history: StatusHistoryEntry[]) => (
     <div className="text-sm space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-muted-foreground">התקבלה בתאריך</span>
@@ -468,6 +481,7 @@ ${placemarks}
                   {h.old_status && (
                     <span className="text-muted-foreground"> (לפני כן: {STATUS_LABELS[h.old_status]})</span>
                   )}
+                  <span className="text-muted-foreground"> · {h.changed_by_label || 'לא ידוע'}</span>
                 </span>
                 <span className="text-muted-foreground shrink-0" dir="ltr">
                   {new Date(h.changed_at).toLocaleString('he-IL')}
@@ -878,6 +892,66 @@ ${placemarks}
             {editingSubmission && (
               <div className="bg-muted/30 rounded-lg border border-border p-3">
                 {renderStatusHistoryBlock(editingSubmission.createdAt, statusHistory)}
+              </div>
+            )}
+            {editingSubmission && (
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="flex-1 min-w-[180px] space-y-1">
+                  <Label className="text-xs text-muted-foreground">סטטוס</Label>
+                  <Select
+                    value={editingSubmission.status}
+                    onValueChange={(v) => handleDialogStatusChange(v as DbSubmissionStatus)}
+                  >
+                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenResponseEdit(editingSubmission.id, editingSubmission.adminResponse)}
+                >
+                  <MessageSquare className="h-4 w-4 ml-2" />
+                  תגובה לציבור
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenNoteEdit(editingSubmission.id, editingSubmission.internalNote)}
+                >
+                  <StickyNote className="h-4 w-4 ml-2" />
+                  הערה פנימית
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button type="button" variant="outline" size="sm" className="text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4 ml-2" />
+                      מחק הגשה
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>מחיקת הגשה</AlertDialogTitle>
+                      <AlertDialogDescription>האם אתה בטוח? פעולה זו אינה ניתנת לביטול.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="flex-row-reverse gap-2">
+                      <AlertDialogCancel>ביטול</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => {
+                          handleDelete(editingSubmission.id);
+                          setEditingSubmission(null);
+                        }}
+                        className="bg-destructive text-destructive-foreground"
+                      >
+                        מחק
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             )}
             <ScrollArea className="max-h-[60vh] pr-4">

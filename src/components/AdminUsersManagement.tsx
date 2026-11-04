@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { UserPlus, Trash2, Shield, Check, X, Clock, History } from 'lucide-react';
+import { UserPlus, Trash2, Shield, Check, X, Clock, History, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +24,10 @@ interface AdminRow {
   created_at: string;
 }
 
+interface AdminWithNicknameRow extends AdminRow {
+  nickname: string | null;
+}
+
 interface RegistrationRow {
   user_id: string;
   email: string;
@@ -42,12 +46,14 @@ const REGISTRATION_STATUS_LABEL: Record<string, string> = {
 // thin UI over that, not where the actual access control lives).
 export default function AdminUsersManagement() {
   const { user } = useAuth();
-  const [admins, setAdmins] = useState<AdminRow[]>([]);
+  const [admins, setAdmins] = useState<AdminWithNicknameRow[]>([]);
   const [pendingUsers, setPendingUsers] = useState<AdminRow[]>([]);
   const [registrations, setRegistrations] = useState<RegistrationRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newEmail, setNewEmail] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [editingNicknameId, setEditingNicknameId] = useState<string | null>(null);
+  const [nicknameDraft, setNicknameDraft] = useState('');
 
   const loadAll = async () => {
     setIsLoading(true);
@@ -105,6 +111,20 @@ export default function AdminUsersManagement() {
       toast.error(error.message);
     } else {
       toast.success('הוסרו הרשאות הניהול');
+      loadAll();
+    }
+  };
+
+  const handleSaveNickname = async (userId: string) => {
+    const { error } = await supabase.rpc('set_admin_nickname', {
+      target_user_id: userId,
+      new_nickname: nicknameDraft.trim() || null,
+    });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('הכינוי נשמר');
+      setEditingNicknameId(null);
       loadAll();
     }
   };
@@ -238,6 +258,54 @@ export default function AdminUsersManagement() {
                     <p className="text-xs text-muted-foreground">
                       אדמין מתאריך {new Date(admin.created_at).toLocaleDateString('he-IL')}
                     </p>
+                    <div className="flex items-center gap-1 mt-1">
+                      {editingNicknameId === admin.user_id ? (
+                        <>
+                          <Input
+                            value={nicknameDraft}
+                            onChange={(e) => setNicknameDraft(e.target.value)}
+                            placeholder="כינוי להצגה בלוג"
+                            className="h-7 text-xs w-36"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-success hover:text-success"
+                            onClick={() => handleSaveNickname(admin.user_id)}
+                            title="שמור כינוי"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => setEditingNicknameId(null)}
+                            title="ביטול"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-xs text-muted-foreground">
+                            {admin.nickname ? `כינוי: ${admin.nickname}` : 'אין כינוי מוגדר'}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => {
+                              setEditingNicknameId(admin.user_id);
+                              setNicknameDraft(admin.nickname || '');
+                            }}
+                            title="ערוך כינוי"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>

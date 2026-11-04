@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_nicknames: {
+        Row: {
+          nickname: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          nickname: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          nickname?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bicycle_submissions: {
         Row: {
           address: string
@@ -254,6 +272,7 @@ export type Database = {
         Returns: {
           created_at: string
           email: string
+          nickname: string
           user_id: string
         }[]
       }
@@ -274,11 +293,24 @@ export type Database = {
           user_id: string
         }[]
       }
+      list_submission_status_history: {
+        Args: { p_submission_id: string }
+        Returns: {
+          changed_at: string
+          changed_by_label: string
+          new_status: Database["public"]["Enums"]["submission_status"]
+          old_status: Database["public"]["Enums"]["submission_status"]
+        }[]
+      }
       reject_pending_user: {
         Args: { target_user_id: string }
         Returns: undefined
       }
       remove_admin: { Args: { target_user_id: string }; Returns: undefined }
+      set_admin_nickname: {
+        Args: { new_nickname: string; target_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
