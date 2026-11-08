@@ -1,8 +1,8 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import L from 'leaflet';
 import { HeatLayer } from 'leaflet.heat';
-import PublicMap from '@/components/PublicMap';
-import { AdminSubmission } from '@/types/database';
+import PublicMap, { STATUS_COLORS } from '@/components/PublicMap';
+import { AdminSubmission, STATUS_LABELS, PARKING_CONDITIONS_LABELS } from '@/types/database';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,6 +41,7 @@ const HEAT_OPTIONS = {
 export default function AdminHeatmapView({ submissions, onMarkerClick }: AdminHeatmapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const heatLayerRef = useRef<HeatLayer | null>(null);
+  const pointsLayerRef = useRef<L.LayerGroup | null>(null);
   const [stations, setStations] = useState<DockingStation[]>([]);
   const [isLoadingStations, setIsLoadingStations] = useState(true);
   const [dampingEnabled, setDampingEnabled] = useState(true);
@@ -50,6 +51,7 @@ export default function AdminHeatmapView({ submissions, onMarkerClick }: AdminHe
   const handleMapReady = useCallback((map: L.Map) => {
     mapRef.current = map;
     heatLayerRef.current = new HeatLayer([], HEAT_OPTIONS).addTo(map);
+    pointsLayerRef.current = L.layerGroup().addTo(map);
   }, []);
 
   // The dampening calculation needs the docking stations up front, not
@@ -100,14 +102,61 @@ export default function AdminHeatmapView({ submissions, onMarkerClick }: AdminHe
     heatLayerRef.current.setLatLngs(points);
   }, [weightedPoints, dampingEnabled]);
 
+  // On the heatmap tab, submissions show as small dots instead of the full
+  // bicycle pins - the heat layer is the main picture, and a dot that opens
+  // its details on hover is enough to identify an individual report inside
+  // a hotspot without visually competing with the heat itself.
+  useEffect(() => {
+    if (!pointsLayerRef.current) return;
+    pointsLayerRef.current.clearLayers();
+    submissions.forEach((s) => {
+      const marker = L.circleMarker([s.latitude, s.longitude], {
+        radius: 4,
+        weight: 1,
+        color: '#ffffff',
+        fillColor: STATUS_COLORS[s.status] || STATUS_COLORS.approved,
+        fillOpacity: 0.9,
+      });
+      marker.bindPopup(`
+        <div style="direction: rtl; text-align: right; min-width: 200px;">
+          <strong style="font-size: 13px;">${s.address}</strong>
+          <p style="margin: 6px 0 0; font-size: 12px; color: #666;">
+            ${PARKING_CONDITIONS_LABELS[s.parkingCondition]}
+          </p>
+          <span style="
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            background: ${STATUS_COLORS[s.status] || STATUS_COLORS.approved};
+            color: white;
+            margin: 6px 0 2px;
+          ">
+            ${STATUS_LABELS[s.status]}
+          </span>
+          <p style="margin: 2px 0 0; font-size: 10px; color: #aaa;">
+            ${s.createdAt.toLocaleDateString('he-IL')}
+          </p>
+        </div>
+      `);
+      marker.on('mouseover', () => marker.openPopup());
+      marker.on('mouseout', () => marker.closePopup());
+      marker.on('click', () => onMarkerClick(s));
+      marker.addTo(pointsLayerRef.current!);
+    });
+  }, [submissions, onMarkerClick]);
+
   return (
     <div className="absolute inset-0">
-      <PublicMap
-        submissions={submissions}
-        onMarkerClick={(submission) => onMarkerClick(submission as AdminSubmission)}
-        emptyMessage="לא נמצאו דיווחים התואמים את הסינון"
-        onMapReady={handleMapReady}
-      />
+      <PublicMap submissions={[]} onMapReady={handleMapReady} />
+
+      {submissions.length === 0 && (
+        <div className="absolute inset-0 z-[400] flex items-center justify-center pointer-events-none">
+          <div className="bg-card/95 backdrop-blur-sm rounded-lg shadow-civic border border-border px-4 py-3 text-sm text-muted-foreground">
+            לא נמצאו דיווחים התואמים את הסינון
+          </div>
+        </div>
+      )}
 
       <div className="absolute top-3 left-3 z-[500] flex flex-col items-start gap-2">
         <div className="bg-card/95 backdrop-blur-sm rounded-lg shadow-civic border border-border p-3 max-w-[220px]">
