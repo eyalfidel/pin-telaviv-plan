@@ -212,6 +212,29 @@ export default function SecureAdminDashboard() {
     toast.success('הקובץ יוצא בהצלחה');
   };
 
+  const exportToAnonymizedGeoJSON = () => {
+    const geojson = {
+      type: 'FeatureCollection',
+      features: submissions.map((s) => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [s.longitude, s.latitude] },
+        properties: {
+          parkingCondition: PARKING_CONDITIONS_LABELS[s.parkingCondition],
+          status: STATUS_LABELS[s.status],
+          createdAt: s.createdAt.toISOString().slice(0, 10),
+        },
+      })),
+    };
+    const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'bicycle-parking-anonymized.geojson';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('הקובץ יוצא בהצלחה (ללא פרטים מזהים)');
+  };
+
   const escapeXml = (str: string) =>
     String(str ?? '')
       .replace(/&/g, '&amp;')
@@ -642,6 +665,12 @@ ${placemarks}
                   <DropdownMenuItem onClick={exportToKML}>
                     <Download className="h-4 w-4 ml-2" />
                     KML (Google Earth)
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>שכבה אנונימית לשיתוף</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={exportToAnonymizedGeoJSON}>
+                    <Download className="h-4 w-4 ml-2" />
+                    GeoJSON ללא פרטים מזהים
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
