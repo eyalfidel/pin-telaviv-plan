@@ -18,7 +18,8 @@ import {
   Unlock,
   Users,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Flame
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,6 +72,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import AdminMapView from '@/components/AdminMapView';
+import AdminHeatmapView from '@/components/AdminHeatmapView';
 import AdminFilterPanel from '@/components/AdminFilterPanel';
 // @ts-ignore - no types
 import * as shpwrite from '@mapbox/shp-write';
@@ -90,7 +92,7 @@ import {
 } from '@/types/database';
 import { toast } from 'sonner';
 
-type ViewMode = 'table' | 'map';
+type ViewMode = 'table' | 'map' | 'heatmap';
 
 type StatusHistoryEntry = {
   old_status: DbSubmissionStatus | null;
@@ -638,6 +640,9 @@ ${placemarks}
                 <Button variant={viewMode === 'map' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('map')} className="rounded-none">
                   <Map className="h-4 w-4 ml-1" />מפה
                 </Button>
+                <Button variant={viewMode === 'heatmap' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('heatmap')} className="rounded-none">
+                  <Flame className="h-4 w-4 ml-1" />מפת חום
+                </Button>
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -828,9 +833,13 @@ ${placemarks}
               </TableBody>
             </Table>
           </div>
-          ) : (
+          ) : viewMode === 'map' ? (
           <div className="relative h-[70vh] min-h-[500px]">
             <AdminMapView submissions={filteredSubmissions} onMarkerClick={handleOpenEdit} />
+          </div>
+          ) : (
+          <div className="relative h-[70vh] min-h-[500px]">
+            <AdminHeatmapView submissions={filteredSubmissions} onMarkerClick={handleOpenEdit} />
           </div>
           )}
         </div>
